@@ -7,10 +7,15 @@ set -euo pipefail
 
 declare -r pipeline_file=${1:?missing pipeline file}
 
-if [[ "$(yq '.kind' "$pipeline_file")" != "PipelineRun" ]]; then
-    echo "Not a PipelineRun, skipping migration"
+manifest_kind=$(yq '.kind // ""' "$pipeline_file")
+
+case "$manifest_kind" in
+PipelineRun | Pipeline) ;;
+*)
+    echo "Found kind '$manifest_kind'. Not a PipelineRun or Pipeline, skipping migration"
     exit 0
-fi
+    ;;
+esac
 
 if ! yq -e '.spec.params[] | select(.name == "sast-target-dirs")' "$pipeline_file" >/dev/null 2>&1; then
     echo "No sast-target-dirs parameter found in spec.params, skipping migration"
