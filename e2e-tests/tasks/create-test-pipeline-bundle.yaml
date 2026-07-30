@@ -1,0 +1,62 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: create-test-pipeline-bundle
+spec:
+  description: |
+    This task reads the task bundles from the SNAPSHOT and creates test pipeline bundles
+  params:
+    - name: SNAPSHOT
+      type: string
+      default: '{"components": [{"name":"task-git-clone", "containerImage": "quay.io/redhat-repo/git-clone@sha256:f27401affdd74d77a9595e2516ebc226ca564b9faf69a5f649bf7687a5a49d20"}]}'
+      description: "The name of the secret containing the kubeconfig to access the target cluster."
+  volumes:
+    - name: konflux-ci-secrets-volume
+      secret:
+        secretName: konflux-e2e-secrets
+  results:
+    - name: docker-build-pipeline-bundle
+      description: "Docker Build Pipeline Bundle Reference"
+    - name: docker-build-oci-ta-pipeline-bundle
+      description: "Docker Build OCI TA Pipeline Bundle Reference"
+    - name: docker-build-oci-ta-min-pipeline-bundle
+      description: "Docker Build OCI TA Min Pipeline Bundle Reference"
+    - name: docker-build-multi-platform-oci-ta-pipeline-bundle
+      description: "Docker Build Multi Platform OCI TA Pipeline Bundle Reference"
+    - name: fbc-builder-pipeline-bundle
+      description: "Fbc Builder Build Pipeline Bundle Reference"
+  steps:
+    - name: create-bundle
+      image: registry.access.redhat.com/ubi9/go-toolset:1.26
+      workingDir: /workspace/source
+      volumeMounts:
+        - name: konflux-ci-secrets-volume
+          mountPath: /usr/local/konflux-ci-secrets
+      securityContext:
+        runAsUser: 0
+      env:
+        - name: SNAPSHOT
+          value: $(params.SNAPSHOT)
+        - name: GIT_URL
+          value: "https://github.com/tisutisu/build-pipeline-tasks.git"
+        - name: GIT_REVISION
+          value: "add-e2e-tests"
+      script: |
+        #!/bin/bash
+        set -euo pipefail
+
+        QUAY_TOKEN="$(cat "/usr/local/konflux-ci-secrets/quay-token")"
+        export QUAY_TOKEN
+
+        git config --global --add safe.directory /workspace/source
+        git config --global user.name "redhat-appstudio-qe-bot"
+        git config --global user.email redhat-appstudio-qe-bot@redhat.com
+
+        git clone "${GIT_URL}" /workspace/source
+        cd /workspace/source
+        git checkout "${GIT_REVISION}"
+        
+        cd e2e-tests/
+        go mod download
+        go run createBundle.go "${SNAPSHOT}"

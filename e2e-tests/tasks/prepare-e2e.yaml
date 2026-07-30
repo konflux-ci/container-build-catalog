@@ -1,0 +1,217 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: prepare-e2e
+  labels:
+    app.kubernetes.io/version: "0.4"
+    upstream-usable: "true"
+  annotations:
+    tekton.dev/pipelines.minVersion: 0.12.1
+    tekton.dev/tags: konflux
+spec:
+  description: |
+    The `prepare-e2e` Task is responsible for gathering and processing metadata during the execution of a pipeline test.
+    It collects various Git and repository details, such as the type of event that triggered the pipeline (Push or Pull Request), the Git URL and revision
+    and writes this information to specified results.
+    It also determines if its a specific component change or not and help determine the pipeline whether to continue next steps or not 
+  results:
+    - name: test-event-type
+      description: Indicates if the job is triggered by a Pull Request or a Push event.
+    - name: pull-request-number
+      description: The pull request number if the job is triggered by a pull request event.
+    - name: git-url
+      description: The Git URL from which the test pipeline is originating. This can be from a fork or the original repository.
+    - name: git-revision
+      description: The Git revision (commit SHA) from which the test pipeline is originating.
+    - name: git-org
+      description: The GitHub organization from which the test is originating.
+    - name: git-repo
+      description: The repository from which the test is originating.
+    - name: pull-request-author
+      description: The GitHub author of the pull request event.
+    - name: source-repo-url
+      description: Will show the source from where a Pull Request was opened. Can be from a fork or upstream.
+    - name: source-repo-branch
+      description: Get the branch from the fork or upstream repo where the pipeline is executed.
+    - name: target-repo-branch
+      description: The target branch value from the Pull Request or the current branch value in case of push event.
+    - name: run-e2e
+      description: Will be used in other task inside the when condition when running e2e-tests is neccessary
+  params:
+    - name: SNAPSHOT
+      description: The JSON string of the Snapshot under test.
+  steps:
+    - name: test-metadata
+      image: quay.io/konflux-qe-incubator/konflux-qe-tools:latest
+      workingDir: /workspace
+      env:
+        - name: SNAPSHOT
+          value: $(params.SNAPSHOT)
+        - name: KONFLUX_COMPONENT_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['appstudio.openshift.io/component']
+        - name: TEST_TYPE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['test.appstudio.openshift.io/type']
+        - name: GROUP_TEST_INFO
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['test.appstudio.openshift.io/group-test-info']
+        - name: EVENT_TYPE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['pac.test.appstudio.openshift.io/event-type']
+        - name: PULL_REQUEST_NUMBER
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['pac.test.appstudio.openshift.io/pull-request']
+        - name: GIT_ORGANIZATION
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['pac.test.appstudio.openshift.io/url-org']
+        - name: GIT_REPOSITORY
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['pac.test.appstudio.openshift.io/url-repository']
+        - name: SOURCE_REPO_URL
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['pac.test.appstudio.openshift.io/source-repo-url']
+        - name: SOURCE_REPO_BRANCH
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['pac.test.appstudio.openshift.io/source-branch']
+        # This value refers to the target branch value in 'pull-request' events and branch value in 'push' events.
+        # E.g. for push event to 'main' branch this will have the value 'main'. For PR event that targets 'main' branch, this will be also 'main'.
+        - name: TARGET_REPO_BRANCH
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['pac.test.appstudio.openshift.io/branch']
+      script: |
+        #!/bin/bash
+
+        # Log the derived environment variables
+        echo "Integration Test metadata:"
+        echo "  SNAPSHOT: $SNAPSHOT"
+        echo "  TEST_TYPE: $TEST_TYPE"
+        echo "  EVENT_TYPE: $EVENT_TYPE"
+ 
+        if [[ -z "$TEST_TYPE" ]]; then
+          echo "[ERROR] TEST_TYPE is required to proceed furthur"
+          exit 1
+        fi
+
+        if [[ "$TEST_TYPE" == "group" ]]; then
+          PULL_REQUEST_NUMBER="$(echo "$GROUP_TEST_INFO" | jq -r '.[0].pullRequestNumber')"
+          GIT_ORGANIZATION="$(echo "$GROUP_TEST_INFO" | jq -r '.[0].repoUrl | split("/")[3]')"
+          GIT_REPOSITORY="$(echo "$GROUP_TEST_INFO" | jq -r '.[0].repoUrl | split("/")[4]')"
+          echo "  PULL_REQUEST_NUMBER: $PULL_REQUEST_NUMBER"
+          echo "  GIT_ORGANIZATION: $GIT_ORGANIZATION"
+          echo "  GIT_REPOSITORY: $GIT_REPOSITORY"
+          pull_request_data="$(curl -s "https://api.github.com/repos/${GIT_ORGANIZATION}/${GIT_REPOSITORY}/pulls/${PULL_REQUEST_NUMBER}")"
+          GIT_URL="$(echo "$pull_request_data" | jq -r .head.repo.html_url)"
+          GIT_REVISION="$(echo "$pull_request_data" | jq -r .head.sha)"
+          PR_AUTHOR="$(echo "$pull_request_data" | jq -r .user.login)"
+          SOURCE_REPO_URL="${GIT_URL}"
+          SOURCE_REPO_BRANCH="$(echo "$pull_request_data" | jq -r .head.ref)"
+          TARGET_REPO_BRANCH="$(echo "$pull_request_data" | jq -r .base.ref)"
+          echo "  GIT_URL: $GIT_URL"
+          echo "  GIT_REVISION: $GIT_REVISION"
+          echo "  PR_AUTHOR: $PR_AUTHOR"
+          echo "  SOURCE_REPO_URL: $SOURCE_REPO_URL"
+          echo "  SOURCE_REPO_BRANCH: $SOURCE_REPO_BRANCH"
+          echo "  TARGET_REPO_BRANCH: $TARGET_REPO_BRANCH"
+        
+        elif [[ "$TEST_TYPE" == "component" ]]; then
+  
+          if [[ -z "$KONFLUX_COMPONENT_NAME" ]]; then
+            echo "[ERROR] KONFLUX_COMPONENT_NAME is required to extract git url and revision, but not found"
+            exit 1
+          fi
+
+          # Extract additional environment variables from SNAPSHOT
+          GIT_URL=$(jq -r --arg component_name "$KONFLUX_COMPONENT_NAME" '.components[] | select(.name == $component_name) | .source.git.url' <<< "$SNAPSHOT" 2>/dev/null || echo "")
+          GIT_REVISION=$(jq -r --arg name "$KONFLUX_COMPONENT_NAME" '.components[] | select(.name == $component_name) | .source.git.revision' <<< "$SNAPSHOT" 2>/dev/null || echo "")
+          PR_AUTHOR="$(curl -s "https://api.github.com/repos/${GIT_ORGANIZATION}/${GIT_REPOSITORY}/pulls/${PULL_REQUEST_NUMBER}" | jq -r .user.login 2>/dev/null || echo "")"
+
+          echo "  PULL_REQUEST_NUMBER: $PULL_REQUEST_NUMBER"
+          echo "  KONFLUX_COMPONENT_NAME: $KONFLUX_COMPONENT_NAME"
+          echo "  GIT_ORGANIZATION: $GIT_ORGANIZATION"
+          echo "  GIT_REPOSITORY: $GIT_REPOSITORY"
+          echo "  GIT_URL: $GIT_URL"
+          echo "  GIT_REVISION: $GIT_REVISION"
+          echo "  PR_AUTHOR: $PR_AUTHOR"
+          echo "  SOURCE_REPO_URL: $SOURCE_REPO_URL"
+          echo "  SOURCE_REPO_BRANCH: $SOURCE_REPO_BRANCH"
+          echo "  TARGET_REPO_BRANCH: $TARGET_REPO_BRANCH"
+
+          #
+          page=1
+          changed_files=""
+          while true; do
+            response=$(curl -s "https://api.github.com/repos/${GIT_ORGANIZATION}/${GIT_REPOSITORY}/pulls/${PULL_REQUEST_NUMBER}/files?per_page=100&page=${page}")
+
+            # Break if empty array or error
+            count=$(echo "$response" | jq 'if type == "array" then length else 0 end')
+            if [[ "$count" -eq 0 ]]; then
+              break
+            fi
+
+            files=$(echo "$response" | jq -r '.[].filename')
+            changed_files="${changed_files}${files}"$'\n'
+
+            if [[ "$count" -lt 100 ]]; then
+              break
+            fi
+            page=$((page + 1))
+          done
+
+          if [[ -z "${changed_files// }" ]]; then
+            echo "[ERROR] No changed files found for PR #${PULL_REQUEST_NUMBER}. Check that the PR number is valid."
+            exit 1
+          fi
+
+          # Extract unique task directory names (task/<name>/...)
+          changed_tasks=$(echo "$changed_files" | grep '^task/' | awk -F'/' '{print $2}' | sort -u)
+
+          if [[ -z "$changed_tasks" ]]; then
+            echo "No task directories were changed in PR #${PULL_REQUEST_NUMBER}."
+            exit 0
+          fi
+
+          echo ""
+          echo "Changed task directories in PR #${PULL_REQUEST_NUMBER}:"
+          echo "-------------------------------------------"
+          echo "$changed_tasks"
+          echo "-------------------------------------------"
+
+          number_of_task_changed="$(echo "$changed_tasks" | wc -l | tr -d ' ')"
+          if [[ "$number_of_task_changed" > 1 ]]; then
+            echo "More than one task changed, no need to continue"
+            exit 0
+          fi
+
+          if [[ "task-$changed_tasks" != "$KONFLUX_COMPONENT_NAME" ]]; then
+            echo "Component name does not match, no need to continue"
+            exit 0
+          fi
+        else 
+          echo "[ERROR] Unknown test type, exiting..."
+          exit 1
+        fi
+
+        # Write each environment variable to its respective result file
+        echo -n "$EVENT_TYPE" > "$(results.test-event-type.path)"
+        echo -n "$PULL_REQUEST_NUMBER" > "$(results.pull-request-number.path)"
+        echo -n "$GIT_ORGANIZATION" > "$(results.git-org.path)"
+        echo -n "$GIT_REPOSITORY" > "$(results.git-repo.path)"
+        echo -n "$GIT_URL" > "$(results.git-url.path)"
+        echo -n "$GIT_REVISION" > "$(results.git-revision.path)"
+        echo -n "$PR_AUTHOR" > "$(results.pull-request-author.path)"
+        echo -n "$SOURCE_REPO_URL" > "$(results.source-repo-url.path)"
+        echo -n "$SOURCE_REPO_BRANCH" > "$(results.source-repo-branch.path)"
+        echo -n "$TARGET_REPO_BRANCH" > "$(results.target-repo-branch.path)"
+        echo -n "true" > "$(results.run-e2e.path)"
