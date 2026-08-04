@@ -59,7 +59,7 @@ spec:
     imagePullPolicy: IfNotPresent
   steps:
     - name: prefetch-dependencies
-      image: quay.io/konflux-ci/hermeto:0.59.0@sha256:869078333d840bd56bce503c06215ee43e7d21681abba4b9b055026879d047fa
+      image: quay.io/konflux-ci/hermeto:0.60.0@sha256:a0b715cce19beb0cab969465940571ed3375c257373a23d599200fb47c8c0a01
       volumeMounts:
         - name: activation-key
           mountPath: /activation-key
