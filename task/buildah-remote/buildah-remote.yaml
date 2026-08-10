@@ -884,6 +884,8 @@ spec:
 
       if [ -f "/shared/prefetch-arch" ]; then
         mobster_args+=(--arch "$(cat /shared/prefetch-arch)")
+      elif [ -n "${PLATFORM}" ]; then
+        mobster_args+=(--arch "${PLATFORM#*/}")
       fi
 
       mobster "${mobster_args[@]}"
