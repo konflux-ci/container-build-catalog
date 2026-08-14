@@ -189,7 +189,7 @@ spec:
           echo "-------------------------------------------"
 
           number_of_task_changed="$(echo "$changed_tasks" | wc -l | tr -d ' ')"
-          if [[ "$number_of_task_changed" > 1 ]]; then
+          if [[ "$number_of_task_changed" -gt 1 ]]; then
             echo "More than one task changed, no need to continue"
             exit 0
           fi
