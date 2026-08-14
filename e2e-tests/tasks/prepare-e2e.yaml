@@ -14,7 +14,8 @@ spec:
     The `prepare-e2e` Task is responsible for gathering and processing metadata during the execution of a pipeline test.
     It collects various Git and repository details, such as the type of event that triggered the pipeline (Push or Pull Request), the Git URL and revision
     and writes this information to specified results.
-    It also determines if its a specific component change or not and help determine the pipeline whether to continue next steps or not 
+    It also determines if its a specific component change or not and help determine the pipeline whether to continue next steps or not
+    Once the integration issue https://redhat.atlassian.net/browse/STONEINTG-1763 resolves, this task can be updated to only process the metadata
   results:
     - name: test-event-type
       description: Indicates if the job is triggered by a Pull Request or a Push event.
