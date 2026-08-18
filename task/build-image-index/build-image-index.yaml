@@ -90,7 +90,7 @@ spec:
         mountPath: /mnt/trusted-ca
         readOnly: true
   steps:
-  - image: quay.io/konflux-ci/konflux-build-cli:latest@sha256:0415613f955ef8f7c6fc821a6738dcf062d9a3582441042b87a2391c375d7f54
+  - image: quay.io/konflux-ci/konflux-build-cli:latest@sha256:85141954209ee158fe9e559869a0da196ff08c5d4bb15b1a6c2e54d4fcd6b52f
     # per https://kubernetes.io/docs/concepts/containers/images/#imagepullpolicy-defaulting
     # the cluster will set imagePullPolicy to IfNotPresent
     name: build

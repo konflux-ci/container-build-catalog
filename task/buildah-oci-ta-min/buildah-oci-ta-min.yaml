@@ -406,7 +406,7 @@ spec:
       value: $(params.SOURCE_DATE_EPOCH)
     - name: BUILDAH_REWRITE_TIMESTAMP
       value: $(params.REWRITE_TIMESTAMP)
-    image: quay.io/konflux-ci/konflux-build-cli:latest@sha256:f2a1ac5ca99d46468c0d54cefc478bdd2ffdae01acfb492112201e2e099fd170
+    image: quay.io/konflux-ci/konflux-build-cli:latest@sha256:85141954209ee158fe9e559869a0da196ff08c5d4bb15b1a6c2e54d4fcd6b52f
     name: build
     script: |
       #!/bin/bash
