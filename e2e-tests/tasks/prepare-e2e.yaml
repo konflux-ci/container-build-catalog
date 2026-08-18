@@ -43,7 +43,7 @@ spec:
     - name: SNAPSHOT
       description: The JSON string of the Snapshot under test.
   steps:
-    - name: test-metadata
+    - name: prepare-e2e
       image: quay.io/konflux-qe-incubator/konflux-qe-tools:latest
       workingDir: /workspace
       env:

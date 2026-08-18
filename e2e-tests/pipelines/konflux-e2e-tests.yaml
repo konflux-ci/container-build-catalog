@@ -21,7 +21,7 @@ spec:
       type: string
       default: 'konflux-test-infra'
     - name: oci-container-repo
-      default: 'quay.io/konflux-test-storage/konflux-team/image-controller' # TODO: need to create seperate for build-pipeline-tasks
+      default: 'quay.io/konflux-test-storage/konflux-team/container-build-catalog'
       description: The OCI container used to store all test artifacts.
     - name: artifact-browser-url
       description: "URL to the artifact browser deployment. If provided, a link will be added to PR comments."
