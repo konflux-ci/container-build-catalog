@@ -11,6 +11,20 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.13.0
+
+### Added
+
+- New parameter `COMPRESSION_FORMAT`: select the compression format used when
+  pushing the image (`gzip`, `zstd:chunked` or `dual`). Empty (default) keeps
+  buildah's default behavior. `dual` is a tech preview: both gzip and
+  zstd:chunked variants are pushed and bundled in a per-arch OCI index. See
+  [ADR 0070](https://github.com/konflux-ci/architecture/blob/main/ADR/0070-dual-compression-for-container-builds.md).
+- New result `IMAGES`: comma-separated references of the pushed image
+  manifests. Only set when `COMPRESSION_FORMAT=dual`.
+- In dual mode, SBOMs are generated for the per-arch index and for each
+  compression variant, and signing and SBOM attestation cover all of them.
+
 ## 0.12.0
 
 ### Changed

@@ -59,6 +59,7 @@ When prefetch-dependencies task is activated it is using its artifacts to run bu
 |SKIP_INJECTIONS|Don't inject a content-sets.json or a labels.json file. This requires that the canonical Containerfile takes care of this itself.|false|false|
 |LOG_LEVEL|Log level for the build command.|info|false|
 |ALLOW_CROSS_PLATFORM_IMAGES|Allows to use parent images that don't match the build host architecture. This option must be used with caution as it may create incompatible images.|false|false|
+|COMPRESSION_FORMAT|Compression format to use when pushing the image. Valid values: gzip, zstd:chunked, dual. Empty means buildah's default (gzip). dual is a tech preview: both gzip and zstd:chunked variants are pushed and bundled in a per-arch OCI index. Requires BUILDAH_FORMAT=oci.|""|false|
 |PLATFORM|The platform to build on||true|
 |IMAGE_APPEND_PLATFORM|Whether to append a sanitized platform architecture on the IMAGE tag|false|false|
 
@@ -68,6 +69,7 @@ When prefetch-dependencies task is activated it is using its artifacts to run bu
 |IMAGE_DIGEST|Digest of the image just built|
 |IMAGE_URL|Image repository and tag where the built image was pushed|
 |IMAGE_REF|Image reference of the built image|
+|IMAGES|Comma-separated references of the image manifests just built. In dual compression mode, lists the gzip and zstd:chunked child manifests of the per-arch index (gzip first). Empty otherwise.|
 |SBOM_BLOB_URL|Reference of SBOM blob digest to enable digest-based verification from provenance|
 
 ## Workspaces
