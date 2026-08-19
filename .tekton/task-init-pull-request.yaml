@@ -98,6 +98,9 @@ spec:
     - description: ""
       name: CHAINS-GIT_COMMIT
       value: $(tasks.clone-repository.results.commit)
+    - description: ""
+      name: SHOULD_RELEASE
+      value: $(tasks.build-container.results.SHOULD_RELEASE)
     tasks:
     - name: init
       params:
@@ -183,7 +186,7 @@ spec:
         - name: name
           value: tkn-bundle-oci-ta
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-tkn-bundle-oci-ta:0.2@sha256:da807e473a1f3b6565617080ccdbfa7f49f34084c224bc0fb5123acc08a9f51c
+          value: quay.io/rh-ee-msoltis/catalog:my-tkn-bundle-oci-ta
         - name: kind
           value: task
         resolver: bundles
