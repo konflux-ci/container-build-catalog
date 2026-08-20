@@ -2,10 +2,10 @@
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
-  name: build-pipeline-tasks-e2e-tests
+  name: container-build-catalog-e2e-tests
 spec:
   description: |
-    This task runs build-pipeline-tasks E2E tests from the build-pipeline-tasks repository itself,
+    This task runs container-build-catalog related E2E tests from the container-build-catalog repository itself,
     using the in-repo test framework under e2e-tests/. It sets up the environment,
     loads secrets, and executes the Go tests with Ginkgo.
   params:
@@ -15,13 +15,13 @@ spec:
       description: "The name of the secret containing the kubeconfig to access the target cluster."
     - name: git-url
       type: string
-      default: "https://github.com/konflux-ci/build-pipeline-tasks.git"
-      description: "The URL of the build-pipeline-tasks Git repository."
+      default: "https://github.com/konflux-ci/container-build-catalog.git"
+      description: "The URL of the container-build-catalog Git repository."
     - name: git-revision
       type: string
       default: "main"
       description: "The revision (branch, tag, or SHA) to checkout."
-    - name: oras-container
+    - name: oci-container
       type: string
       description: "The URI of the OCI container registry to store test artifacts."
       default: "quay.io/org/rhtap-e2e-artifacts"
@@ -60,7 +60,6 @@ spec:
         secretName: konflux-test-infra
     - name: cluster-secret-volume
       secret:
-        optional: true
         secretName: $(params.cluster-access-secret-name)
   steps:
     - name: e2e-test
@@ -159,7 +158,7 @@ spec:
 
         mkdir -p "${ARTIFACT_DIR}"
 
-        /bin/bash -c "e2e-tests/scripts/build-pipeline-tasks-e2e.sh"
+        /bin/bash -c "e2e-tests/scripts/run-e2e.sh"
     - name: secure-push-oci
       ref:
         resolver: git
@@ -174,7 +173,7 @@ spec:
         - name: workdir-path
           value: /workspace/artifact-dir
         - name: oci-ref
-          value: $(params.oras-container)
+          value: $(params.oci-container)
         - name: credentials-volume-name
           value: konflux-infra-secrets-volume
     - name: fail-if-any-step-failed

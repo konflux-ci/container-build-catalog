@@ -39,6 +39,10 @@ spec:
       description: The target branch value from the Pull Request or the current branch value in case of push event.
     - name: run-e2e
       description: Will be used in other task inside the when condition when running e2e-tests is neccessary
+    - name: snapshot-type
+      description: It will contain the type of the snapshot, for which the pipeline is triggered, for example, group or component
+    - name: component-name
+      description: name of the component for which pipelinerun is triggered
   params:
     - name: SNAPSHOT
       description: The JSON string of the Snapshot under test.
@@ -93,6 +97,7 @@ spec:
               fieldPath: metadata.annotations['pac.test.appstudio.openshift.io/branch']
       script: |
         #!/bin/bash
+        set -euo pipefail
 
         # Log the derived environment variables
         echo "Integration Test metadata:"
@@ -112,7 +117,10 @@ spec:
           echo "  PULL_REQUEST_NUMBER: $PULL_REQUEST_NUMBER"
           echo "  GIT_ORGANIZATION: $GIT_ORGANIZATION"
           echo "  GIT_REPOSITORY: $GIT_REPOSITORY"
-          pull_request_data="$(curl -s "https://api.github.com/repos/${GIT_ORGANIZATION}/${GIT_REPOSITORY}/pulls/${PULL_REQUEST_NUMBER}")"
+          if ! pull_request_data="$(curl -fsSL "https://api.github.com/repos/${GIT_ORGANIZATION}/${GIT_REPOSITORY}/pulls/${PULL_REQUEST_NUMBER}")"; then
+            echo "Failed to fetch PR ${PULL_REQUEST_NUMBER}" >&2
+            exit 1
+          fi
           GIT_URL="$(echo "$pull_request_data" | jq -r .head.repo.html_url)"
           GIT_REVISION="$(echo "$pull_request_data" | jq -r .head.sha)"
           PR_AUTHOR="$(echo "$pull_request_data" | jq -r .user.login)"
@@ -135,7 +143,7 @@ spec:
 
           # Extract additional environment variables from SNAPSHOT
           GIT_URL=$(jq -r --arg component_name "$KONFLUX_COMPONENT_NAME" '.components[] | select(.name == $component_name) | .source.git.url' <<< "$SNAPSHOT" 2>/dev/null || echo "")
-          GIT_REVISION=$(jq -r --arg name "$KONFLUX_COMPONENT_NAME" '.components[] | select(.name == $component_name) | .source.git.revision' <<< "$SNAPSHOT" 2>/dev/null || echo "")
+          GIT_REVISION=$(jq -r --arg component_name "$KONFLUX_COMPONENT_NAME" '.components[] | select(.name == $component_name) | .source.git.revision' <<< "$SNAPSHOT" 2>/dev/null || echo "")
           PR_AUTHOR="$(curl -s "https://api.github.com/repos/${GIT_ORGANIZATION}/${GIT_REPOSITORY}/pulls/${PULL_REQUEST_NUMBER}" | jq -r .user.login 2>/dev/null || echo "")"
 
           echo "  PULL_REQUEST_NUMBER: $PULL_REQUEST_NUMBER"
@@ -153,10 +161,17 @@ spec:
           page=1
           changed_files=""
           while true; do
-            response=$(curl -s "https://api.github.com/repos/${GIT_ORGANIZATION}/${GIT_REPOSITORY}/pulls/${PULL_REQUEST_NUMBER}/files?per_page=100&page=${page}")
-
-            # Break if empty array or error
-            count=$(echo "$response" | jq 'if type == "array" then length else 0 end')
+            if ! response=$(curl -fsSL "https://api.github.com/repos/${GIT_ORGANIZATION}/${GIT_REPOSITORY}/pulls/${PULL_REQUEST_NUMBER}/files?per_page=100&page=${page}"); then
+              echo "Error: Failed to fetch PR files ( page ${page})" >&2
+              exit 1
+            fi
+            # Validate JSON and get count
+            if ! count=$(echo "$response" | jq -e 'if type == "array" then length else 0 end'); then
+              echo "Error: Invalid JSON response from GitHub API" >&2
+              echo "Got Response: $response" >&2
+              exit 1
+            fi
+            # Break on empty page
             if [[ "$count" -eq 0 ]]; then
               break
             fi
@@ -189,14 +204,9 @@ spec:
           echo "$changed_tasks"
           echo "-------------------------------------------"
 
-          number_of_task_changed="$(echo "$changed_tasks" | wc -l | tr -d ' ')"
+          number_of_task_changed="$(echo "$changed_tasks" | wc -l)"
           if [[ "$number_of_task_changed" -gt 1 ]]; then
             echo "More than one task changed, no need to continue"
-            exit 0
-          fi
-
-          if [[ "task-$changed_tasks" != "$KONFLUX_COMPONENT_NAME" ]]; then
-            echo "Component name does not match, no need to continue"
             exit 0
           fi
         else 
@@ -216,3 +226,5 @@ spec:
         echo -n "$SOURCE_REPO_BRANCH" > "$(results.source-repo-branch.path)"
         echo -n "$TARGET_REPO_BRANCH" > "$(results.target-repo-branch.path)"
         echo -n "true" > "$(results.run-e2e.path)"
+        echo -n "$TEST_TYPE" > "$(results.snapshot-type.path)"
+        echo -n "$KONFLUX_COMPONENT_NAME" > "$(results.component-name.path)"

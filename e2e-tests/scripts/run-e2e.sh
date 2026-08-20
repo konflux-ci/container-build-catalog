@@ -57,7 +57,7 @@ load_envs
 
 GINKGO_PROCS="${GINKGO_PROCS:-3}"
 
-log "INFO" "Running build-pipeline-tasks e2e tests with label filter: build-pipeline-e2e"
+log "INFO" "Running container-build-catalog e2e tests with label filter: build-pipeline-e2e"
 
 cd /workspace/source/e2e-tests
 

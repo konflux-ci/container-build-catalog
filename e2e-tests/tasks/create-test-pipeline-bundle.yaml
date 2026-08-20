@@ -11,6 +11,12 @@ spec:
       type: string
       default: '{"components": [{"name":"task-git-clone", "containerImage": "quay.io/redhat-repo/git-clone@sha256:f27401affdd74d77a9595e2516ebc226ca564b9faf69a5f649bf7687a5a49d20"}]}'
       description: "The name of the secret containing the kubeconfig to access the target cluster."
+    - name: snapshot-type
+      type: string
+      description: 'type of the snapshot, for example, group or component'
+    - name: component-name
+      type: string
+      description: 'name of the component in case of snapshot-type is component'
   volumes:
     - name: konflux-ci-secrets-volume
       secret:
@@ -46,6 +52,9 @@ spec:
         #!/bin/bash
         set -euo pipefail
 
+        # Log params
+        echo "SNAPSHOT_TYPE: $(params.snapshot-type)"
+        echo "COMPONENT_NAME: $(params.component-name)"
         QUAY_TOKEN="$(cat "/usr/local/konflux-ci-secrets/quay-token")"
         export QUAY_TOKEN
 
@@ -59,4 +68,4 @@ spec:
         
         cd e2e-tests/
         go mod download
-        go run createBundle.go "${SNAPSHOT}"
+        go run createBundle.go "${SNAPSHOT}" "$(params.snapshot-type)" "$(params.component-name)"
