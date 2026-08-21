@@ -1,0 +1,205 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/tags: "konflux"
+  name: resolve-index-url
+spec:
+  description: >-
+    Resolve the RHAI Python package index URL from an AIPCC base image label.
+    Parses the Containerfile to find the FROM base image, then reads the
+    com.redhat.aiplatform.index_url label via skopeo inspect. The resolved
+    URL is emitted as a result for use as PIP_INDEX_URL in the
+    prefetch-dependencies task.
+  params:
+    - name: DOCKERFILE
+      description: Path to the Containerfile.
+      type: string
+      default: ./Dockerfile
+    - name: CONTEXT
+      description: Path to the directory to use as context.
+      type: string
+      default: .
+    - name: BUILD_ARGS_FILE
+      description: >-
+        Path to a file with build arguments, relative to the source root.
+        Used to resolve ARG values in the Containerfile (e.g., ARG APP_BASE_IMAGE).
+        When empty, ARG values are resolved from BUILD_ARGS only.
+      type: string
+      default: ""
+    - name: BUILD_ARGS
+      description: >-
+        Array of build arguments in key=value format.
+        These override values from BUILD_ARGS_FILE.
+      type: array
+      default: []
+    - name: INDEX_URL_LABEL
+      description: Label name to read from the base container image.
+      type: string
+      default: com.redhat.aiplatform.index_url
+    - name: CA_TRUST_CONFIG_MAP_NAME
+      type: string
+      description: The name of the ConfigMap to read CA bundle data from.
+      default: trusted-ca
+    - name: CA_TRUST_CONFIG_MAP_KEY
+      type: string
+      description: The name of the key in the ConfigMap that contains the CA bundle data.
+      default: ca-bundle.crt
+  results:
+    - name: pip-index-url
+      description: >-
+        Resolved Python package index URL from the base image label.
+        Empty if the label is not found or the base image cannot be resolved.
+  stepTemplate:
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - name: trusted-ca
+        mountPath: /etc/pki/tls/certs/ca-custom-bundle.crt
+        subPath: ca-bundle.crt
+        readOnly: true
+  steps:
+    - name: resolve
+      image: quay.io/konflux-ci/task-runner:2.0.0@sha256:4b01fbf98fa7155f5c21443c285f88853864ae7cc66981cf6b543fc6ba16b81b
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: DOCKERFILE
+          value: $(params.DOCKERFILE)
+        - name: CONTEXT
+          value: $(params.CONTEXT)
+        - name: BUILD_ARGS_FILE
+          value: $(params.BUILD_ARGS_FILE)
+        - name: INDEX_URL_LABEL
+          value: $(params.INDEX_URL_LABEL)
+        - name: RESULT_PATH
+          value: $(results.pip-index-url.path)
+      computeResources:
+        limits:
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          memory: 256Mi
+      script: |
+        #!/bin/bash
+        set -euo pipefail
+
+        SOURCE_CODE_DIR="source"
+
+        # Locate the Containerfile (same pattern as buildah task)
+        if [ -e "${SOURCE_CODE_DIR}/${CONTEXT}/${DOCKERFILE}" ]; then
+          dockerfile_path="${SOURCE_CODE_DIR}/${CONTEXT}/${DOCKERFILE}"
+        elif [ -e "${SOURCE_CODE_DIR}/${DOCKERFILE}" ]; then
+          dockerfile_path="${SOURCE_CODE_DIR}/${DOCKERFILE}"
+        else
+          echo "Containerfile not found at ${CONTEXT}/${DOCKERFILE}, skipping"
+          echo -n "" >"${RESULT_PATH}"
+          exit 0
+        fi
+
+        echo "Using Containerfile: ${dockerfile_path}"
+
+        # Load build-args-file values into an associative array
+        declare -A build_args
+
+        if [ -n "${BUILD_ARGS_FILE}" ]; then
+          args_file="${SOURCE_CODE_DIR}/${BUILD_ARGS_FILE}"
+          if [ -e "${args_file}" ]; then
+            echo "Reading build args from: ${args_file}"
+            while IFS= read -r line || [ -n "$line" ]; do
+              # Skip comments and empty lines
+              [[ "${line}" =~ ^[[:space:]]*# ]] && continue
+              [[ -z "${line}" ]] && continue
+              # Split on first = only
+              key="${line%%=*}"
+              value="${line#*=}"
+              # Strip leading/trailing whitespace from key
+              key="$(echo "${key}" | xargs)"
+              [ -z "${key}" ] && continue
+              build_args["${key}"]="${value}"
+            done < "${args_file}"
+          else
+            echo "Build args file not found: ${args_file}, continuing without it"
+          fi
+        fi
+
+        # Load BUILD_ARGS array (overrides file values)
+        # The array is passed as individual args to this script
+        for arg in "$@"; do
+          key="${arg%%=*}"
+          value="${arg#*=}"
+          build_args["${key}"]="${value}"
+        done
+
+        # Extract first FROM image reference from the Containerfile
+        from_line=$(grep -m1 -i '^[[:space:]]*FROM ' "${dockerfile_path}" | sed 's/^[[:space:]]*[Ff][Rr][Oo][Mm] //')
+
+        if [ -z "${from_line}" ]; then
+          echo "No FROM instruction found in ${dockerfile_path}, skipping"
+          echo -n "" >"${RESULT_PATH}"
+          exit 0
+        fi
+
+        echo "FROM line: ${from_line}"
+
+        # Strip --platform=... flag
+        from_line=$(echo "${from_line}" | sed 's/--platform=[^ ]* //')
+        # Strip AS alias
+        from_line=$(echo "${from_line}" | sed 's/ [Aa][Ss] .*//')
+        # Trim whitespace
+        from_line=$(echo "${from_line}" | xargs)
+
+        # Resolve ${VAR} and $VAR references using build_args
+        for var in "${!build_args[@]}"; do
+          from_line="${from_line//\$\{${var}\}/${build_args[${var}]}}"
+          from_line="${from_line//\$${var}/${build_args[${var}]}}"
+        done
+
+        base_image="${from_line}"
+
+        # Check if there are unresolved variables
+        if [[ "${base_image}" == *'$'* ]]; then
+          echo "Could not fully resolve base image reference: ${base_image}"
+          echo "Ensure the required ARG values are provided via build-args-file or build-args"
+          echo -n "" >"${RESULT_PATH}"
+          exit 0
+        fi
+
+        if [ -z "${base_image}" ]; then
+          echo "Empty base image reference after resolution, skipping"
+          echo -n "" >"${RESULT_PATH}"
+          exit 0
+        fi
+
+        echo "Resolved base image: ${base_image}"
+
+        # Inspect the base image and read the label
+        index_url=""
+        if inspect_output=$(skopeo inspect --no-tags "docker://${base_image}" 2>&1); then
+          index_url=$(echo "${inspect_output}" | jq -r --arg label "${INDEX_URL_LABEL}" '.Labels[$label] // empty')
+        else
+          echo "skopeo inspect failed for ${base_image}:"
+          echo "${inspect_output}"
+          echo "Continuing with empty result"
+        fi
+
+        if [ -n "${index_url}" ]; then
+          echo "Resolved index URL from label ${INDEX_URL_LABEL}: ${index_url}"
+        else
+          echo "Label ${INDEX_URL_LABEL} not found on ${base_image}, result will be empty"
+        fi
+
+        echo -n "${index_url}" >"${RESULT_PATH}"
+      args: ["$(params.BUILD_ARGS[*])"]
+  workspaces:
+    - name: source
+      description: Workspace containing the source code with the Containerfile.
+  volumes:
+    - name: trusted-ca
+      configMap:
+        name: $(params.CA_TRUST_CONFIG_MAP_NAME)
+        items:
+          - key: $(params.CA_TRUST_CONFIG_MAP_KEY)
+            path: ca-bundle.crt
+        optional: true
