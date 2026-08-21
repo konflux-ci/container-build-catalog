@@ -1,69 +1,87 @@
+---
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
+  name: resolve-index-url-oci-ta
+  annotations:
+    tekton.dev/pipelines.minVersion: 0.12.1
+    tekton.dev/tags: konflux
   labels:
     app.kubernetes.io/version: "0.1"
-  annotations:
-    tekton.dev/pipelines.minVersion: "0.12.1"
-    tekton.dev/tags: "konflux"
-  name: resolve-index-url
 spec:
-  description: >-
-    Resolve the RHAI Python package index URL from an AIPCC base image label.
-    Parses the Containerfile to find the FROM base image, then reads the
-    com.redhat.aiplatform.index_url label via skopeo inspect. The resolved
-    URL is emitted as a result for use as PIP_INDEX_URL in the
-    prefetch-dependencies task.
+  description: Resolve the RHAI Python package index URL from an AIPCC base
+    image label.
   params:
-    - name: DOCKERFILE
-      description: Path to the Containerfile.
+    - name: BUILD_ARGS
+      description: Array of build arguments in key=value format. These override
+        values from BUILD_ARGS_FILE.
+      type: array
+      default: []
+    - name: BUILD_ARGS_FILE
+      description: Path to a file with build arguments, relative to the source
+        root. Used to resolve ARG values in the Containerfile (e.g., ARG APP_BASE_IMAGE).
+        When empty, ARG values are resolved from BUILD_ARGS only.
       type: string
-      default: ./Dockerfile
+      default: ""
+    - name: CA_TRUST_CONFIG_MAP_KEY
+      description: The name of the key in the ConfigMap that contains the
+        CA bundle data.
+      type: string
+      default: ca-bundle.crt
+    - name: CA_TRUST_CONFIG_MAP_NAME
+      description: The name of the ConfigMap to read CA bundle data from.
+      type: string
+      default: trusted-ca
     - name: CONTEXT
       description: Path to the directory to use as context.
       type: string
       default: .
-    - name: BUILD_ARGS_FILE
-      description: >-
-        Path to a file with build arguments, relative to the source root.
-        Used to resolve ARG values in the Containerfile (e.g., ARG APP_BASE_IMAGE).
-        When empty, ARG values are resolved from BUILD_ARGS only.
+    - name: DOCKERFILE
+      description: Path to the Containerfile.
       type: string
-      default: ""
-    - name: BUILD_ARGS
-      description: >-
-        Array of build arguments in key=value format.
-        These override values from BUILD_ARGS_FILE.
-      type: array
-      default: []
+      default: ./Dockerfile
     - name: INDEX_URL_LABEL
       description: Label name to read from the base container image.
       type: string
       default: com.redhat.aiplatform.index_url
-    - name: CA_TRUST_CONFIG_MAP_NAME
+    - name: SOURCE_ARTIFACT
+      description: The Trusted Artifact URI pointing to the artifact with
+        the application source code.
       type: string
-      description: The name of the ConfigMap to read CA bundle data from.
-      default: trusted-ca
-    - name: CA_TRUST_CONFIG_MAP_KEY
-      type: string
-      description: The name of the key in the ConfigMap that contains the CA bundle data.
-      default: ca-bundle.crt
   results:
     - name: pip-index-url
-      description: >-
-        Resolved Python package index URL from the base image label.
+      description: Resolved Python package index URL from the base image label.
         Empty if the label is not found or the base image cannot be resolved.
+  volumes:
+    - name: trusted-ca
+      configMap:
+        items:
+          - key: $(params.CA_TRUST_CONFIG_MAP_KEY)
+            path: ca-bundle.crt
+        name: $(params.CA_TRUST_CONFIG_MAP_NAME)
+        optional: true
+    - name: workdir
+      emptyDir: {}
   stepTemplate:
     imagePullPolicy: IfNotPresent
     volumeMounts:
-      - name: trusted-ca
-        mountPath: /etc/pki/tls/certs/ca-custom-bundle.crt
-        subPath: ca-bundle.crt
+      - mountPath: /etc/pki/tls/certs/ca-custom-bundle.crt
+        name: trusted-ca
         readOnly: true
+        subPath: ca-bundle.crt
+      - mountPath: /var/workdir
+        name: workdir
   steps:
+    - name: use-trusted-artifact
+      image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:a61ef5dfee9a8720f7bc2d1d52001057ca6a22d2ddbae0db175b11d9ab95105a
+      args:
+        - use
+        - $(params.SOURCE_ARTIFACT)=/var/workdir/source
     - name: resolve
       image: quay.io/konflux-ci/task-runner:2.0.0@sha256:4b01fbf98fa7155f5c21443c285f88853864ae7cc66981cf6b543fc6ba16b81b
-      workingDir: $(workspaces.source.path)
+      args:
+        - $(params.BUILD_ARGS[*])
+      workingDir: /var/workdir
       env:
         - name: DOCKERFILE
           value: $(params.DOCKERFILE)
@@ -75,12 +93,6 @@ spec:
           value: $(params.INDEX_URL_LABEL)
         - name: RESULT_PATH
           value: $(results.pip-index-url.path)
-      computeResources:
-        limits:
-          memory: 256Mi
-        requests:
-          cpu: 100m
-          memory: 256Mi
       script: |
         #!/bin/bash
         set -euo pipefail
@@ -118,7 +130,7 @@ spec:
               key="$(echo "${key}" | xargs)"
               [ -z "${key}" ] && continue
               build_args["${key}"]="${value}"
-            done < "${args_file}"
+            done <"${args_file}"
           else
             echo "Build args file not found: ${args_file}, continuing without it"
           fi
@@ -191,15 +203,9 @@ spec:
         fi
 
         echo -n "${index_url}" >"${RESULT_PATH}"
-      args: ["$(params.BUILD_ARGS[*])"]
-  workspaces:
-    - name: source
-      description: Workspace containing the source code with the Containerfile.
-  volumes:
-    - name: trusted-ca
-      configMap:
-        name: $(params.CA_TRUST_CONFIG_MAP_NAME)
-        items:
-          - key: $(params.CA_TRUST_CONFIG_MAP_KEY)
-            path: ca-bundle.crt
-        optional: true
+      computeResources:
+        limits:
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          memory: 256Mi

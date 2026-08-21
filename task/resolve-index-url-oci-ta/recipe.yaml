@@ -1,0 +1,11 @@
+---
+base: ../resolve-index-url/resolve-index-url.yaml
+add:
+  - use-source
+preferStepTemplate: true
+removeWorkspaces:
+  - source
+replacements:
+  workspaces.source.path: /var/workdir
+description: |-
+  Resolve the RHAI Python package index URL from an AIPCC base image label.
