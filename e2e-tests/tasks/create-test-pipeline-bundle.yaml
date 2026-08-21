@@ -14,9 +14,9 @@ spec:
     - name: snapshot-type
       type: string
       description: 'type of the snapshot, for example, group or component'
-    - name: component-name
+    - name: component-names
       type: string
-      description: 'name of the component in case of snapshot-type is component'
+      description: 'comma seperated name of the components to be updated'
   volumes:
     - name: konflux-ci-secrets-volume
       secret:
@@ -54,7 +54,7 @@ spec:
 
         # Log params
         echo "SNAPSHOT_TYPE: $(params.snapshot-type)"
-        echo "COMPONENT_NAME: $(params.component-name)"
+        echo "COMPONENT_NAMES: $(params.component-names)"
         QUAY_TOKEN="$(cat "/usr/local/konflux-ci-secrets/quay-token")"
         export QUAY_TOKEN
 
@@ -68,4 +68,4 @@ spec:
         
         cd e2e-tests/
         go mod download
-        go run createBundle.go "${SNAPSHOT}" "$(params.snapshot-type)" "$(params.component-name)"
+        go run createBundle.go "${SNAPSHOT}" "$(params.snapshot-type)" "$(params.component-names)"

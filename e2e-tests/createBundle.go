@@ -30,16 +30,16 @@ type SnapshotComponent struct {
 	ContainerImage string `json:"containerImage"`
 }
 
-func ParseSnapshotImages(snapshotJSON, snapshotType, componentName string) (map[string]string, error) {
+func ParseSnapshotImages(snapshotJSON, snapshotType, componentNames string) (map[string]string, error) {
 	var snapshot Snapshot
 	if err := json.Unmarshal([]byte(snapshotJSON), &snapshot); err != nil {
 		return nil, fmt.Errorf("failed to parse snapshot JSON: %w", err)
 	}
-
 	componentImages := make(map[string]string, len(snapshot.Components))
+	componentNamesToBeParsed := strings.Split(componentNames, ",")
 	for _, c := range snapshot.Components {
-		// In case of group snapshot, get all the components and for component snapshot, get the containerImage only component matching the componentName
-		if (snapshotType == "group") || (snapshotType == "component" && componentName == c.Name) {
+		// get only containerImages whose name matches which are in componentNames
+		if (snapshotType == "group" && slices.Contains(componentNamesToBeParsed, c.Name)) || (snapshotType == "component" && componentNamesToBeParsed[0] == c.Name) {
 			taskName := strings.TrimPrefix(c.Name, "task-")
 			componentImages[taskName] = c.ContainerImage
 		}
@@ -80,10 +80,10 @@ func main() {
 	}
 	snapshotString := os.Args[1]
 	snapshotType := os.Args[2]
-	componentName := os.Args[3]
+	componentNames := os.Args[3]
 
 	var err error
-	updatedTaskBundleMap, err = ParseSnapshotImages(snapshotString, snapshotType, componentName)
+	updatedTaskBundleMap, err = ParseSnapshotImages(snapshotString, snapshotType, componentNames)
 	if err != nil {
 		fmt.Printf("[ERROR] failed to parse snapshot with error: %v\n", err)
 		os.Exit(1)

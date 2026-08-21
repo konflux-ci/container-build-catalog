@@ -41,8 +41,8 @@ spec:
       description: Will be used in other task inside the when condition when running e2e-tests is neccessary
     - name: snapshot-type
       description: It will contain the type of the snapshot, for which the pipeline is triggered, for example, group or component
-    - name: component-name
-      description: name of the component for which pipelinerun is triggered
+    - name: component-names
+      description: comma seperated name of the components for which pipelinerun is triggered
   params:
     - name: SNAPSHOT
       description: The JSON string of the Snapshot under test.
@@ -110,6 +110,62 @@ spec:
           exit 1
         fi
 
+        get_changed_tasks() {
+          local git_org="$1"
+          local git_repo="$2"
+          local pull_request_number="$3"
+          # Validate parameters
+          if [[ -z "$GIT_ORGANIZATION" || -z "$GIT_REPOSITORY" || -z "$PULL_REQUEST_NUMBER" ]]; then
+            echo "Error: Missing required parameters" >&2
+            echo "Usage: get_changed_tasks <organization> <repository> <pr_number>" >&2
+            return 1
+          fi
+
+          local page=1
+          local changed_files=""
+          while true; do
+            if ! response=$(curl -fsSL "https://api.github.com/repos/${git_org}/${git_repo}/pulls/${pull_request_number}/files?per_page=100&page=${page}"); then
+              echo "Error: Failed to fetch PR files ( page ${page})" >&2
+              return 1
+            fi
+            # Validate JSON and get count
+            if ! count=$(echo "$response" | jq -e 'if type == "array" then length else 0 end'); then
+              echo "Error: Invalid JSON response from GitHub API" >&2
+              echo "Got Response: $response" >&2
+              return 1
+            fi
+            # Break on empty page
+            if [[ "$count" -eq 0 ]]; then
+              break
+            fi
+
+            files=$(echo "$response" | jq -r '.[].filename')
+            changed_files="${changed_files}${files}"$'\n'
+
+            if [[ "$count" -lt 100 ]]; then
+              break
+            fi
+            page=$((page + 1))
+          done
+
+          if [[ -z "${changed_files// }" ]]; then
+            echo "[ERROR] No changed files found for PR #${PULL_REQUEST_NUMBER}. Check that the PR number is valid."
+            return 1
+          fi
+
+          # Extract unique task directory names (task/<name>/...)
+          local changed_tasks
+          changed_tasks=$(echo "$changed_files" | grep '^task/' | awk -F'/' '{print $2}' | sort -u)
+
+          if [[ -z "$changed_tasks" ]]; then
+            echo "No task directories were changed in PR #${PULL_REQUEST_NUMBER}"
+            return 0
+          fi
+
+          # Return changed tasks via stdout
+          echo "$changed_tasks"
+          return 0
+        }  
         if [[ "$TEST_TYPE" == "group" ]]; then
           PULL_REQUEST_NUMBER="$(echo "$GROUP_TEST_INFO" | jq -r '.[0].pullRequestNumber')"
           GIT_ORGANIZATION="$(echo "$GROUP_TEST_INFO" | jq -r '.[0].repoUrl | split("/")[3]')"
@@ -133,7 +189,13 @@ spec:
           echo "  SOURCE_REPO_URL: $SOURCE_REPO_URL"
           echo "  SOURCE_REPO_BRANCH: $SOURCE_REPO_BRANCH"
           echo "  TARGET_REPO_BRANCH: $TARGET_REPO_BRANCH"
-        
+          if ! changed_tasks=$(get_changed_tasks "${GIT_ORGANIZATION}" "${GIT_REPOSITORY}" "${PULL_REQUEST_NUMBER}"); then
+            echo "[ERROR] failed to get changed tasks, exiting..."
+            exit 1
+          fi
+          command_seperated_component_names=$(echo "${changed_tasks}" | sed 's/^/task-/' | paste -sd ',' -)
+          echo "CHANGED COMPONENT NAMES: ${command_seperated_component_names}"
+          echo -n "${command_seperated_component_names}" > "$(results.component-names.path)"
         elif [[ "$TEST_TYPE" == "component" ]]; then
   
           if [[ -z "$KONFLUX_COMPONENT_NAME" ]]; then
@@ -156,59 +218,19 @@ spec:
           echo "  SOURCE_REPO_URL: $SOURCE_REPO_URL"
           echo "  SOURCE_REPO_BRANCH: $SOURCE_REPO_BRANCH"
           echo "  TARGET_REPO_BRANCH: $TARGET_REPO_BRANCH"
-
-          #
-          page=1
-          changed_files=""
-          while true; do
-            if ! response=$(curl -fsSL "https://api.github.com/repos/${GIT_ORGANIZATION}/${GIT_REPOSITORY}/pulls/${PULL_REQUEST_NUMBER}/files?per_page=100&page=${page}"); then
-              echo "Error: Failed to fetch PR files ( page ${page})" >&2
-              exit 1
-            fi
-            # Validate JSON and get count
-            if ! count=$(echo "$response" | jq -e 'if type == "array" then length else 0 end'); then
-              echo "Error: Invalid JSON response from GitHub API" >&2
-              echo "Got Response: $response" >&2
-              exit 1
-            fi
-            # Break on empty page
-            if [[ "$count" -eq 0 ]]; then
-              break
-            fi
-
-            files=$(echo "$response" | jq -r '.[].filename')
-            changed_files="${changed_files}${files}"$'\n'
-
-            if [[ "$count" -lt 100 ]]; then
-              break
-            fi
-            page=$((page + 1))
-          done
-
-          if [[ -z "${changed_files// }" ]]; then
-            echo "[ERROR] No changed files found for PR #${PULL_REQUEST_NUMBER}. Check that the PR number is valid."
+          
+          if ! changed_tasks=$(get_changed_tasks "${GIT_ORGANIZATION}" "${GIT_REPOSITORY}" "${PULL_REQUEST_NUMBER}"); then
+            echo "[ERROR] failed to get changed tasks, exiting..."
             exit 1
           fi
-
-          # Extract unique task directory names (task/<name>/...)
-          changed_tasks=$(echo "$changed_files" | grep '^task/' | awk -F'/' '{print $2}' | sort -u)
-
-          if [[ -z "$changed_tasks" ]]; then
-            echo "No task directories were changed in PR #${PULL_REQUEST_NUMBER}."
-            exit 0
-          fi
-
-          echo ""
-          echo "Changed task directories in PR #${PULL_REQUEST_NUMBER}:"
-          echo "-------------------------------------------"
-          echo "$changed_tasks"
-          echo "-------------------------------------------"
 
           number_of_task_changed="$(echo "$changed_tasks" | wc -l)"
           if [[ "$number_of_task_changed" -gt 1 ]]; then
             echo "More than one task changed, no need to continue"
             exit 0
           fi
+          echo -n "$KONFLUX_COMPONENT_NAME" > "$(results.component-names.path)"
+
         else 
           echo "[ERROR] Unknown test type, exiting..."
           exit 1
@@ -227,4 +249,3 @@ spec:
         echo -n "$TARGET_REPO_BRANCH" > "$(results.target-repo-branch.path)"
         echo -n "true" > "$(results.run-e2e.path)"
         echo -n "$TEST_TYPE" > "$(results.snapshot-type.path)"
-        echo -n "$KONFLUX_COMPONENT_NAME" > "$(results.component-name.path)"

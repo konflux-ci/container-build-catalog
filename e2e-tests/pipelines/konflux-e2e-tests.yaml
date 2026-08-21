@@ -65,8 +65,8 @@ spec:
           value: $(params.SNAPSHOT)
         - name: snapshot-type
           value:  $(tasks.prepare-e2e.results.snapshot-type)
-        - name: component-name
-          value: $(tasks.prepare-e2e.results.component-name)
+        - name: component-names
+          value: $(tasks.prepare-e2e.results.component-names)
     - name: provision-kind-cluster
       runAfter:
         - prepare-e2e

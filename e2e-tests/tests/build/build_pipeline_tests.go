@@ -44,7 +44,7 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 				application, err = f.AsKubeAdmin.HasController.CreateApplication(applicationName, testNamespace)
 				Expect(err).ShouldNot(HaveOccurred(), fmt.Sprintf("failed to create application %s", applicationName))
 
-				componentName = fmt.Sprintf("component-%s", scenarioName)
+				componentName = fmt.Sprintf("component-%s-%s", scenarioName, util.GenerateRandomString(4))
 				component, err = CreateComponent(f, scenarioName, testNamespace, componentName, application)
 				Expect(err).ShouldNot(HaveOccurred(), fmt.Sprintf("failed to create component for scenario: %s", scenarioName))
 
