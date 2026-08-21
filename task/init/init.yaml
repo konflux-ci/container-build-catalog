@@ -9,7 +9,7 @@ metadata:
   name: init
 spec:
   description: >-
-    Dummy change, Initialize Pipeline Task, enables configuration for cache-proxy if required during the PipelineRun.
+    Dummy change 2, Initialize Pipeline Task, enables configuration for cache-proxy if required during the PipelineRun.
   params:
     - name: enable-cache-proxy
       description: Enable cache proxy configuration
