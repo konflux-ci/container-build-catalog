@@ -102,6 +102,7 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 			})
 			It("the PipelineRun should eventually finish", func() {
 				if scenario.DefaultBranch == "symlink" {
+					var podLogs string
 					Eventually(func() bool {
 						plr, err = f.AsKubeAdmin.HasController.GetComponentPipelineRun(componentName, applicationName, testNamespace, "")
 						if err != nil {
@@ -113,8 +114,9 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 							GinkgoWriter.Printf("current pipelinerun reason: %v\n", prReason)
 							return false
 						}
-						return prReason == "Failed"
-					}, 5*time.Minute, constants.PipelineRunPollingInterval).Should(BeTrue(), "symlink pipelinerun reason is not failed as expected")
+						podLogs, err = GetAllPodLogs(f.AsKubeAdmin.CommonController, testNamespace)
+						return prReason == "Failed" && err == nil && strings.Contains(podLogs, "symlink check: found 1 symlink(s) pointing outside the directory")
+					}, 5*time.Minute, constants.PipelineRunPollingInterval).Should(BeTrue(), "symlink pipelinerun is not failed with correct error message as expected")
 				} else {
 					Expect(f.AsKubeAdmin.HasController.WaitForComponentPipelineToBeFinished(component, "", "", "",
 						f.AsKubeAdmin.TektonController, &has.RetryOptions{Retries: 2, Always: true}, plr)).To(Succeed())

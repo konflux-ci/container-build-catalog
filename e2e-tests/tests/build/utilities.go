@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	remoteimg "github.com/google/go-containerregistry/pkg/v1/remote"
 	appservice "github.com/konflux-ci/application-api/api/v1alpha1"
+	"github.com/konflux-ci/e2e-tests/pkg/clients/common"
 	"github.com/konflux-ci/e2e-tests/pkg/clients/oras"
 	"github.com/konflux-ci/e2e-tests/pkg/constants"
 	"github.com/konflux-ci/e2e-tests/pkg/framework"
@@ -190,6 +191,22 @@ func CreateGitlabBuildSecret(f *framework.Framework, secretName string, annotati
 		return fmt.Errorf("error creating build secret: %v", err)
 	}
 	return nil
+}
+
+// GetAllPodLogs returns all the pod logs in a namespace as a single string
+func GetAllPodLogs(s *common.SuiteController, namespace string) (string, error) {
+	var allPodLogs string
+	podList, err := s.ListAllPods(namespace)
+	if err != nil {
+		return "", err
+	}
+	for _, pod := range podList.Items {
+		podLogs := s.GetPodLogs(&pod)
+		for k, v := range podLogs {
+			allPodLogs = allPodLogs + strings.TrimSuffix(k, ".log") + "\n\n" + string(v) + "\n\n"
+		}
+	}
+	return allPodLogs, nil
 }
 
 // this function takes a bundle and prefetchInput value as inputs and creates a bundle with param hermetic=true

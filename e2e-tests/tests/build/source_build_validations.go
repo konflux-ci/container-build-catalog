@@ -35,7 +35,7 @@ func CheckParentSources(c client.Client, tektonController *tekton.TektonControll
 	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 	var baseImagesDigests []string
-	if pipelineBundleName == constants.DockerBuild {
+	if strings.HasPrefix(string(pipelineBundleName), string(constants.DockerBuild)) {
 		parsedDockerfile := parseDockerfileUsedForBuild(c, tektonController, pr)
 		if parsedDockerfile.IsBuildFromScratch() {
 			gomega.Expect(buildResult.BaseImageSourceIncluded).Should(gomega.BeFalse())
@@ -44,7 +44,7 @@ func CheckParentSources(c client.Client, tektonController *tekton.TektonControll
 		baseImagesDigests, err = parsedDockerfile.ConvertParentImagesToBuildahOutputForm()
 		gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 	} else {
-		ginkgo.Fail("CheckParentSources only works for docker-build pipelines")
+		ginkgo.Fail("CheckParentSources only works for docker-build* pipelines")
 	}
 
 	lastBaseImage := baseImagesDigests[len(baseImagesDigests)-1]
