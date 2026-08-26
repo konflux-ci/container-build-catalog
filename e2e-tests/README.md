@@ -23,7 +23,7 @@ Source container build scenarios that test different source build related functi
 **Purpose**: Test source container generation with various parent image scenarios.
 
 ### 4. `excluded` group
-Scenarios that are not included currently in the regular test runs. Blocked due to this issue: https://redhat.atlassian.net/browse/STONEBLD-4969
+Scenarios that are not included currently in the regular test runs. Blocked due to multi-platform-controller is not available in upstream konflux environment yet.
 
 - `multiarch-oci` - Multi-architecture build with OCI media type
 - `multiarch-docker` - Multi-architecture build with Docker media type

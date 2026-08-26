@@ -114,7 +114,7 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 							GinkgoWriter.Printf("current pipelinerun reason: %v\n", prReason)
 							return false
 						}
-						podLogs, err = GetAllPodLogs(f.AsKubeAdmin.CommonController, testNamespace)
+						podLogs, err = GetPipelineRunPodLogs(f.AsKubeAdmin.CommonController, plr.Name, testNamespace)
 						return prReason == "Failed" && err == nil && strings.Contains(podLogs, "symlink check: found 1 symlink(s) pointing outside the directory")
 					}, 5*time.Minute, constants.PipelineRunPollingInterval).Should(BeTrue(), "symlink pipelinerun is not failed with correct error message as expected")
 				} else {

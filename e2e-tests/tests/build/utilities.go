@@ -1,6 +1,7 @@
 package build
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -193,12 +194,16 @@ func CreateGitlabBuildSecret(f *framework.Framework, secretName string, annotati
 	return nil
 }
 
-// GetAllPodLogs returns all the pod logs in a namespace as a single string
-func GetAllPodLogs(s *common.SuiteController, namespace string) (string, error) {
+// GetPipelineRunPodLogs returns all the pod logs for a specific pipelineRun in a namespace as a single string
+func GetPipelineRunPodLogs(s *common.SuiteController, pipelineRunName, namespace string) (string, error) {
 	var allPodLogs string
-	podList, err := s.ListAllPods(namespace)
+	labelSelector := fmt.Sprintf("tekton.dev/pipelineRun=%s", pipelineRunName)
+	podList, err := s.KubeInterface().CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{LabelSelector: labelSelector})
 	if err != nil {
 		return "", err
+	}
+	if len(podList.Items) == 0 {
+		return "", fmt.Errorf("no pods found for pipelineRun %s in namespace %s", pipelineRunName, namespace)
 	}
 	for _, pod := range podList.Items {
 		podLogs := s.GetPodLogs(&pod)
