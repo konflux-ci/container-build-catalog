@@ -35,7 +35,7 @@ spec:
           - name: url
             value: https://github.com/tisutisu/build-pipeline-tasks.git # TODO: Need to be reverted later
           - name: revision
-            value: add-e2e-tests # TODO: Need to be reverted later
+            value: optimize-e2e # TODO: Need to be reverted later
           - name: pathInRepo
             value: e2e-tests/tasks/prepare-e2e.yaml
       params:
@@ -55,9 +55,9 @@ spec:
         resolver: git
         params:
           - name: url
-            value: https://github.com/tisutisu/build-pipeline-tasks.git # TODO: Need to be reverted later
+            value: https://github.com/konflux-ci/tekton-integration-catalog.git
           - name: revision
-            value: add-e2e-tests # TODO: Need to be reverted later
+            value: main
           - name: pathInRepo
             value: e2e-tests/tasks/create-test-pipeline-bundle.yaml
       params:
@@ -164,16 +164,16 @@ spec:
         resolver: git
         params:
           - name: url
-            value: https://github.com/tisutisu/build-pipeline-tasks.git # TODO: need to be reverted to "konflux-ci/container-build-catalog" after merging
+            value: https://github.com/konflux-ci/container-build-catalog.git
           - name: revision
-            value: add-e2e-tests # TODO: need to be reverted to "main" after merging the PR
+            value: main
           - name: pathInRepo
             value: e2e-tests/tasks/container-build-catalog-e2e.yaml
       params:
         - name: git-url
-          value: "https://github.com/tisutisu/build-pipeline-tasks.git" # TODO: Need to be reverted later
+          value: "https://github.com/konflux-ci/container-build-catalog.git"
         - name: git-revision
-          value: add-e2e-tests # TODO: Need to be reverted later
+          value: main
         - name: oci-container
           value: $(params.oci-container-repo):$(context.pipelineRun.name)
         - name: cluster-access-secret-name
