@@ -9,7 +9,7 @@ metadata:
   name: apply-tags
 spec:
   description: >-
-    Dummy change 2 test CI, Applies additional tags to the built image.
+    Applies additional tags to the built image.
   params:
   - name: IMAGE_URL
     description: Image repository and tag reference of the the built image.
