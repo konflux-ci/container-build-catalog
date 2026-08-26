@@ -181,7 +181,7 @@ spec:
         - name: test-environment
           value: "upstream"
         - name: scenario-group
-          value: "all"
+          value: $(tasks.prepare-e2e.results.scenario-group)
         - name: docker-build-pipeline-bundle
           value: $(tasks.create-test-pipeline-bundle.results.docker-build-pipeline-bundle)
         - name: docker-build-oci-ta-pipeline-bundle
