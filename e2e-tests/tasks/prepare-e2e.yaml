@@ -43,6 +43,8 @@ spec:
       description: It will contain the type of the snapshot, for which the pipeline is triggered, for example, group or component
     - name: component-names
       description: comma seperated name of the components for which pipelinerun is triggered
+    - name: scenario-group
+      description: The group of e2e scenarios to run based on the changed tasks.
   params:
     - name: SNAPSHOT
       description: The JSON string of the Snapshot under test.
@@ -165,7 +167,23 @@ spec:
           # Return changed tasks via stdout
           echo "$changed_tasks"
           return 0
-        }  
+        }
+
+        # Determine the scenario group based on the changed tasks.
+        # Prints "all" if any prefetch-dependencies* or buildah* task changed, otherwise prints "basic".
+        determine_scenario_group() {
+          local changed_tasks="$1"
+          local task
+          while IFS= read -r task; do
+            [[ -z "$task" ]] && continue
+            if [[ "$task" == prefetch-dependencies* || "$task" == buildah* ]]; then
+              echo "all"
+              return 0
+            fi
+          done <<< "$changed_tasks"
+          echo "basic"
+          return 0
+        }
         if [[ "$TEST_TYPE" == "group" ]]; then
           PULL_REQUEST_NUMBER="$(echo "$GROUP_TEST_INFO" | jq -r '.[0].pullRequestNumber')"
           GIT_ORGANIZATION="$(echo "$GROUP_TEST_INFO" | jq -r '.[0].repoUrl | split("/")[3]')"
@@ -249,3 +267,7 @@ spec:
         echo -n "$TARGET_REPO_BRANCH" > "$(results.target-repo-branch.path)"
         echo -n "true" > "$(results.run-e2e.path)"
         echo -n "$TEST_TYPE" > "$(results.snapshot-type.path)"
+
+        scenario_group="$(determine_scenario_group "$changed_tasks")"
+        echo "SCENARIO GROUP: ${scenario_group}"
+        echo -n "$scenario_group" > "$(results.scenario-group.path)"
