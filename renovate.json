@@ -53,6 +53,15 @@
         ]
       },
       {
+        "matchFileNames": [
+          "e2e-tests/**"
+        ],
+        "groupName": "e2e-tests go modules",
+        "schedule": [
+          "on sunday"
+        ]
+      },
+      {
         "matchDepTypes": ["indirect"],
         "enabled": false
       }
