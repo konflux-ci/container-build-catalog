@@ -185,7 +185,7 @@ replace (
 	github.com/docker/distribution => github.com/docker/distribution v2.8.2+incompatible
 	github.com/docker/distribution/reference => github.com/distribution/reference v0.5.0
 	github.com/docker/docker => github.com/docker/docker v23.0.7+incompatible
-	github.com/expr-lang/expr => github.com/expr-lang/expr v1.17.7
+	github.com/expr-lang/expr => github.com/expr-lang/expr v1.17.8
 	github.com/go-chi/chi => github.com/go-chi/chi/v5 v5.2.4
 	github.com/go-chi/chi/v5 => github.com/go-chi/chi/v5 v5.2.4
 	k8s.io/api => k8s.io/api v0.34.2
