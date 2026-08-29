@@ -181,7 +181,7 @@ require (
 replace (
 	github.com/antlr/antlr4 => github.com/antlr/antlr4 v0.0.0-20211106181442-e4c1a74c66bd
 	github.com/apcera/gssapi => github.com/openshift/gssapi v0.0.0-20161010215902-5fb4217df13b
-	github.com/cyphar/filepath-securejoin => github.com/cyphar/filepath-securejoin v0.3.6
+	github.com/cyphar/filepath-securejoin => github.com/cyphar/filepath-securejoin v0.7.0
 	github.com/docker/distribution => github.com/docker/distribution v2.8.2+incompatible
 	github.com/docker/distribution/reference => github.com/distribution/reference v0.5.0
 	github.com/docker/docker => github.com/docker/docker v23.0.7+incompatible
