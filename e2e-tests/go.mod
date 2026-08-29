@@ -3,7 +3,7 @@ module github.com/konflux-ci/container-build-catalog/e2e-tests
 go 1.26
 
 require (
-	github.com/devfile/library/v2 v2.2.1-0.20230418160146-e75481b7eebd
+	github.com/devfile/library/v2 v2.4.0
 	github.com/google/go-containerregistry v0.21.0
 	github.com/konflux-ci/application-api v0.0.0-20260529131129-a9594acdc104
 	github.com/konflux-ci/e2e-tests v0.0.0-20260707100404-eca3dcc01e3c
