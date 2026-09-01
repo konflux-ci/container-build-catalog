@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/devfile/library/v2/pkg/util"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	appservice "github.com/konflux-ci/application-api/api/v1alpha1"
 	"github.com/konflux-ci/e2e-tests/pkg/clients/has"
 	"github.com/konflux-ci/e2e-tests/pkg/clients/ociregistry"
@@ -177,6 +178,25 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 					default:
 						Fail(fmt.Sprintf("Unknown ManifestMediaType value %s in scenario \n", scenario.ManifestMediaType))
 					}
+				}
+			})
+			It("should ensure pruning labels are set", func() {
+				// Check pruning labels in only one scenario
+				if scenario.Name == "sample-python-basic-oci-docker-build" {
+					var image *v1.ConfigFile
+					Eventually(func() error {
+						image, err = build.ImageFromPipelineRun(plr)
+						return err
+					}, time.Minute*2, time.Second*10).Should(Succeed(), "timed out while trying fetch image config")
+
+					labels := image.Config.Labels
+					Expect(labels).ToNot(BeEmpty())
+
+					expiration, ok := labels["quay.expires-after"]
+					Expect(ok).To(BeTrue())
+					Expect(expiration).To(Equal(constants.DefaultImageTagExpiration))
+				} else {
+					Skip(fmt.Sprintf("pruning label validation is not required for scenario: %s", scenarioName))
 				}
 			})
 			It("should have Hermeto content in the SBOM in case the build was hermetic", func() {
