@@ -34,7 +34,7 @@ spec:
       description: "Fbc Builder Build Pipeline Bundle Reference"
   steps:
     - name: create-bundle
-      image: registry.access.redhat.com/ubi9/go-toolset:1.26
+      image: registry.access.redhat.com/ubi9/go-toolset:1.26.7-1788245275
       workingDir: /workspace/source
       volumeMounts:
         - name: konflux-ci-secrets-volume
