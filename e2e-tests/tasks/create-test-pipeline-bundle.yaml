@@ -45,9 +45,9 @@ spec:
         - name: SNAPSHOT
           value: $(params.SNAPSHOT)
         - name: GIT_URL
-          value: "https://github.com/tisutisu/build-pipeline-tasks.git"
+          value: "https://github.com/konflux-ci/container-build-catalog.git"
         - name: GIT_REVISION
-          value: "add-e2e-tests"
+          value: "main"
       script: |
         #!/bin/bash
         set -euo pipefail

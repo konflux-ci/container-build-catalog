@@ -33,9 +33,9 @@ spec:
         resolver: git
         params:
           - name: url
-            value: https://github.com/tisutisu/build-pipeline-tasks.git # TODO: Need to be reverted later
+            value: https://github.com/konflux-ci/container-build-catalog.git
           - name: revision
-            value: optimize-e2e # TODO: Need to be reverted later
+            value: main
           - name: pathInRepo
             value: e2e-tests/tasks/prepare-e2e.yaml
       params:
