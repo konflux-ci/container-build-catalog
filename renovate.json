@@ -87,5 +87,13 @@
       ],
       "datasourceTemplate": "docker"
     }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "registry.access.redhat.com/ubi10/go-toolset"
+      ],
+      "allowedVersions": "< 2.0"
+    }
   ]
 }
