@@ -1,3 +1,7 @@
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
 *   @konflux-ci/build-maintainers
+
+/task/prefetch-dependencies/            @konflux-ci/build-maintainers @a-ovchinnikov @eskultety @taylormadore
+/task/prefetch-dependencies-oci-ta/      @konflux-ci/build-maintainers @a-ovchinnikov @eskultety @taylormadore
+/task/prefetch-dependencies-oci-ta-min/  @konflux-ci/build-maintainers @a-ovchinnikov @eskultety @taylormadore
