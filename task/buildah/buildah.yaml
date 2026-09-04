@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   labels:
-    app.kubernetes.io/version: "0.12.1"
+    app.kubernetes.io/version: "0.12.2"
     build.appstudio.redhat.com/build_type: "docker"
   annotations:
     tekton.dev/pipelines.minVersion: "0.12.1"
@@ -208,7 +208,7 @@ spec:
   - name: CONTEXTUALIZE_SBOM
     description: Determines if SBOM will be contextualized.
     type: string
-    default: "false"
+    default: "true"
   - name: SBOM_SKIP_VALIDATION
     description: Flag to enable or disable SBOM validation before save. Validation is optional - use this if you are experiencing performance issues.
     type: string

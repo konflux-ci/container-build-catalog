@@ -11,6 +11,13 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.12.2
+
+### Changed
+
+- Parameter `CONTEXTUALIZE_SBOM` is now set to `false` by default. More
+  information on this changed was provided in the changelog for 0.12.0.
+
 ## 0.12.1
 
 ### Changed

@@ -5,7 +5,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: image-build, konflux
   labels:
-    app.kubernetes.io/version: 0.12.1
+    app.kubernetes.io/version: 0.12.2
     build.appstudio.redhat.com/build_type: docker
   name: buildah-remote
 spec:
@@ -218,7 +218,7 @@ spec:
     description: The image is built from this URL.
     name: SOURCE_URL
     type: string
-  - default: "false"
+  - default: "true"
     description: Determines if SBOM will be contextualized.
     name: CONTEXTUALIZE_SBOM
     type: string
