@@ -1,0 +1,124 @@
+---
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: test-run-script-oci-ta-happy-path
+spec:
+  description: |
+    Pack a tiny fake source tree as a Trusted Artifact, run run-script-oci-ta
+    with an inline script, assert SCRIPT_OUTPUT is OK and check for the 
+    SCRIPT_RUNNER_IMAGE_REFERENCE existence
+  workspaces:
+    - name: tests-workspace
+  tasks:
+    - name: setup-trusted-artifact #Setup a fake source tree as a Trusted Artifact
+      params:
+        - name: ociStorage
+          value: registry-service.kind-registry/oci-ta:latest
+        - name: caTrustConfigMapName
+          value: trusted-ca
+        - name: caTrustConfigMapKey
+          value: ca-bundle.crt
+      taskSpec:
+        results:
+          - name: SOURCE_ARTIFACT
+            type: string
+        workspaces:
+          - name: tests-workspace
+        volumes:
+          - name: trusted-ca
+            configMap:
+              items:
+                - key: $(params.caTrustConfigMapKey)
+                  path: ca-bundle.crt
+              name: $(params.caTrustConfigMapName)
+        params:
+          - name: ociStorage
+          - name: caTrustConfigMapName
+          - name: caTrustConfigMapKey
+        stepTemplate:
+          volumeMounts:
+            - name: trusted-ca
+              mountPath: /etc/pki/tls/certs/ca-custom-bundle.crt
+              subPath: ca-bundle.crt
+              readOnly: true
+        steps:
+          - name: prepare-fake-source
+            image: quay.io/konflux-ci/task-runner:3.1.2@sha256:e272c1e1c60a4ecc72ff9c8d65bc48da534de6f1ce0d5aba79db3ac532d11c35
+            script: |
+              #!/bin/bash
+              set -euo pipefail
+              mkdir -p "$(workspaces.tests-workspace.path)/source"
+              echo "Hello, This is a test program" > "$(workspaces.tests-workspace.path)/source/test.txt"
+          - name: create-trusted-artifact
+            image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:adf22f3ec90bfa3f7e2c832a7d52febd1ea31aa9fff6db21324c965d7d622327
+            env:
+              - name: ORAS_OPTIONS
+                value: --insecure
+              - name: CA_FILE
+                value: /etc/pki/tls/certs/ca-custom-bundle.crt
+            args:
+              - create
+              - --store
+              - $(params.ociStorage)
+              - $(results.SOURCE_ARTIFACT.path)=$(workspaces.tests-workspace.path)/source
+
+    - name: run-task # run task with the trusted artifact and inline script
+      params:
+        - name: ociStorage
+          value: registry-service.kind-registry/oci-ta:latest
+        - name: SOURCE_ARTIFACT
+          value: $(tasks.setup-trusted-artifact.results.SOURCE_ARTIFACT)
+        - name: SCRIPT_RUNNER_IMAGE
+          value: quay.io/konflux-ci/task-runner:3.1.2@sha256:e272c1e1c60a4ecc72ff9c8d65bc48da534de6f1ce0d5aba79db3ac532d11c35
+        - name: SCRIPT
+          value: |
+            #!/bin/bash
+            set -euo pipefail
+            echo 'ok' > "${SCRIPT_OUTPUT}"
+        - name: caTrustConfigMapName
+          value: trusted-ca
+        - name: caTrustConfigMapKey
+          value: ca-bundle.crt
+      taskRef: 
+        name: run-script-oci-ta
+      runAfter:
+        - setup-trusted-artifact
+
+    - name: check-result # verify output
+      params:
+        - name: SCRIPT_OUTPUT
+          value: $(tasks.run-task.results.SCRIPT_OUTPUT)
+        - name: SCRIPT_RUNNER_IMAGE_REFERENCE
+          value: $(tasks.run-task.results.SCRIPT_RUNNER_IMAGE_REFERENCE)
+      taskSpec:
+        params:
+          - name: SCRIPT_OUTPUT
+          - name: SCRIPT_RUNNER_IMAGE_REFERENCE
+        steps:
+          - name: check-script-output
+            image: quay.io/konflux-ci/task-runner:3.1.2@sha256:e272c1e1c60a4ecc72ff9c8d65bc48da534de6f1ce0d5aba79db3ac532d11c35
+            env:
+              - name: SCRIPT_OUTPUT
+                value: $(params.SCRIPT_OUTPUT)
+              - name: SCRIPT_RUNNER_IMAGE_REFERENCE
+                value: $(params.SCRIPT_RUNNER_IMAGE_REFERENCE)
+            script: |
+              #!/bin/bash
+              set -euo pipefail
+              if [ "${SCRIPT_OUTPUT%$'\n'}" != 'ok' ]; then
+                echo "ERROR expected SCRIPT_OUTPUT to be 'ok', but was '${SCRIPT_OUTPUT}'"
+                exit 1
+              fi
+
+              if [ "$SCRIPT_RUNNER_IMAGE_REFERENCE" = "" ]; then
+                echo "ERROR expected SCRIPT_RUNNER_IMAGE_REFERENCE to be set"
+                exit 1
+              fi
+              case "$SCRIPT_RUNNER_IMAGE_REFERENCE" in *@sha256:*);; *)
+                echo "ERROR expected @sha256: in SCRIPT_RUNNER_IMAGE_REFERENCE, got: ${SCRIPT_RUNNER_IMAGE_REFERENCE}"
+                exit 1
+              esac
+              echo "SUCCESS"
+      runAfter:
+        - run-task
