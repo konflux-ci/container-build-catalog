@@ -96,6 +96,36 @@ Cons:
       (e.g. auto-apply the relevant migration scripts to pipelines before running the tests).
 4. We run e2e-tests more often (because we should test the separate pipeline update PR as well).
 
+### E2E testing
+
+Our current test setup works like this:
+
+- When a task gets updated:
+  - Fetch the latest released pipelines.
+  - Inject the new task bundle into them.
+  - Run the pipelines.
+- This ensures the updated task will work as expected in existing pipelines.
+
+What we need for pipelines:
+
+- When a *pipeline* gets updated:
+  - Take the newly built pipeline bundle.
+  - Run the pipeline.
+- This ensures the updated pipeline will work for components that get it during Konflux onboarding.
+
+Now consider what should happen if a PR updates both a task and a pipeline.
+As described in the cons section above, the PR cannot update the pipeline with the new task reference,
+so the pipeline change would be something unrelated (or related, but not a task version bump).
+Should we take the new pipeline bundle, inject the new task bundle into it, and test that?
+
+No, that would mean we're testing a different pipeline than the one that we will actually release.
+We should run two independent test suites:
+
+- One that takes released pipelines and injects the updated task bundle.
+- One that takes the new pipeline bundle and doesn't inject anything.
+
+To better support this, pipeline Components should be in a separate Application from task Components.
+
 ## Alternatives considered
 
 ### B) Try to preserve the auto-injection flow
