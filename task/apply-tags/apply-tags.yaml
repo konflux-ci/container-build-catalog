@@ -50,7 +50,7 @@ spec:
       env:
         - name: KBC_LOG_LEVEL
           value: $(params.LOG_LEVEL)
-      image: quay.io/konflux-ci/konflux-build-cli@sha256:85141954209ee158fe9e559869a0da196ff08c5d4bb15b1a6c2e54d4fcd6b52f
+      image: quay.io/konflux-ci/konflux-build-cli@sha256:83ce69687db5c44e991351d1ca93940b0056032268fa1952ee8db37ed3b8f73e
       command: ["konflux-build-cli", "image", "apply-tags"]
       args:
         - --image-url
