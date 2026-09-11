@@ -1,4 +1,3 @@
-# WARNING: This is an auto generated file, do not modify this file directly
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
@@ -6,7 +5,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: image-build, konflux
   labels:
-    app.kubernetes.io/version: 0.3.1
+    app.kubernetes.io/version: 0.3.2
   name: build-image-index-min
 spec:
   description: This takes existing Image Manifests and combines them in an Image Index.
@@ -21,6 +20,14 @@ spec:
     type: string
   - description: List of Image Manifests to be referenced by the Image Index
     name: IMAGES
+    type: array
+  - default: []
+    description: Optional per-image platform mapping as 'imageRef=os/arch' entries
+      (e.g. 'quay.io/org/repo@sha256:aaa=linux/amd64'). Used to set the platform on
+      each index entry explicitly, which is required for OCI artifacts whose empty
+      config carries no platform information. When empty, platforms are left to buildah's
+      inference (unchanged behaviour).
+    name: IMAGES_PLATFORMS
     type: array
   - default: "true"
     description: Build an image index even if IMAGES is of length 1. Default true.
@@ -103,6 +110,11 @@ spec:
       # Fixing group permission on /var/lib/containers
       set -eu
       set -o pipefail
+
+      # Optional per-image platform mapping ("imageRef=os/arch" entries).
+      # Declared as a bash array from the array param; empty by default.
+      IMAGES_PLATFORMS=($(params.IMAGES_PLATFORMS[*]))
+
       chown root:root /var/lib/containers
 
       sed -i 's/^\s*short-name-mode\s*=\s*.*/short-name-mode = "disabled"/' /etc/containers/registries.conf
@@ -118,6 +130,14 @@ spec:
 
       MANIFEST_DATA_FILE="/index-build-data/manifest_data.json"
 
+      # Build the optional --images-platforms arguments from the array param.
+      # Each entry is "imageRef=os/arch"; keying by ref makes the mapping
+      # immune to matrix result ordering.
+      PLATFORM_ARGS=()
+      for platform_entry in ${IMAGES_PLATFORMS[@]+"${IMAGES_PLATFORMS[@]}"}; do
+        [ -n "$platform_entry" ] && PLATFORM_ARGS+=("--images-platforms" "$platform_entry")
+      done
+
       echo "Running konflux-build-cli"
       if ! konflux-build-cli image build-image-index \
         --image "$IMAGE" \
@@ -130,6 +150,7 @@ spec:
         --result-path-image-url "$(results.IMAGE_URL.path)" \
         --result-path-image-ref "$(results.IMAGE_REF.path)" \
         --result-path-images "$(results.IMAGES.path)" \
+        ${PLATFORM_ARGS[@]+"${PLATFORM_ARGS[@]}"} \
         --images "$@"; then
         echo "Failed to build image index"
         exit 1
