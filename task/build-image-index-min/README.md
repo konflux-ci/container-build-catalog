@@ -8,6 +8,7 @@ This takes existing Image Manifests and combines them in an Image Index.
 |IMAGE|The target image and tag where the image will be pushed to.||true|
 |TLSVERIFY|Verify the TLS on the registry endpoint (for push/pull to a non-TLS registry)|true|false|
 |IMAGES|List of Image Manifests to be referenced by the Image Index||true|
+|IMAGES_PLATFORMS|Optional per-image platform mapping as 'imageRef=os/arch' entries (e.g. 'quay.io/org/repo@sha256:aaa=linux/amd64'). Used to set the platform on each index entry explicitly, which is required for OCI artifacts whose empty config carries no platform information. When empty, platforms are left to buildah's inference (unchanged behaviour).|[]|false|
 |ALWAYS_BUILD_INDEX|Build an image index even if IMAGES is of length 1. Default true. If the image index generation is skipped, the task will forward values for params.IMAGES[0] to results.IMAGE_*. In order to properly set all results, use the repository:tag@sha256:digest format for the IMAGES parameter.|true|false|
 |STORAGE_DRIVER|Storage driver to configure for buildah|vfs|false|
 |BUILDAH_FORMAT|The format for the resulting image's mediaType. Valid values are oci (default) or docker.|oci|false|

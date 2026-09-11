@@ -11,6 +11,17 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.3.2
+
+### Added
+
+- `IMAGES_PLATFORMS` parameter: optional per-image platform mapping
+  (`imageRef=os/arch` entries) passed to `konflux-build-cli` as
+  `--images-platforms`. This sets the platform on each index entry explicitly,
+  which is required for OCI artifacts whose empty config carries no platform
+  information (e.g. disk images), where the platform would otherwise be null.
+  When empty (the default), behaviour is unchanged.
+
 ## 0.3.1
 
 ### Fixed
