@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2
+
+### Changed
+
+- Consolidated steps `create-sbom` and `upload-sbom` for performance improvement.
+
 ## 0.3.1
 
 ### Fixed

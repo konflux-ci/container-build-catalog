@@ -1,13 +1,10 @@
 - op: replace
   path: /metadata/name
   value: buildah-oci-ta-min
-# kustomize build task/buildah-oci-ta/0.10 | yq '.spec.steps.[].name' | nl -v 0
+# kustomize build task/buildah-oci-ta | yq '.spec.steps.[].name' | nl -v 0
 #      0	use-trusted-artifact
 #      1	build
-#      2	push
-#      3	sbom-syft-generate
-#      4	prepare-sboms
-#      5	upload-sbom
+#      2	prepare-and-upload-sboms
 # StepTemplate
 - op: replace
   path: /spec/stepTemplate/computeResources/limits/memory
@@ -36,36 +33,19 @@
   path: /spec/steps/1/computeResources/requests/cpu
   value: 500m
 
-# prepare-sboms step
+# prepare-and-upload-sboms step
 - op: test
   path: /spec/steps/2/name
-  value: prepare-sboms
+  value: prepare-and-upload-sboms
 - op: replace
   path: /spec/steps/2/computeResources/limits/memory
-  value: 256Mi
+  value: 512Mi
 - op: replace
   path: /spec/steps/2/computeResources/requests/memory
-  value: 256Mi
+  value: 512Mi
 - op: add
   path: /spec/steps/2/computeResources/limits/cpu
   value: 100m
 - op: replace
   path: /spec/steps/2/computeResources/requests/cpu
-  value: 100m
-
-# upload-sbom step
-- op: test
-  path: /spec/steps/3/name
-  value: upload-sbom
-- op: replace
-  path: /spec/steps/3/computeResources/limits/memory
-  value: 512Mi
-- op: replace
-  path: /spec/steps/3/computeResources/requests/memory
-  value: 512Mi
-- op: replace
-  path: /spec/steps/3/computeResources/limits/cpu
-  value: 100m
-- op: replace
-  path: /spec/steps/3/computeResources/requests/cpu
   value: 100m

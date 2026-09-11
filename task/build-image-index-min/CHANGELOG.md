@@ -11,6 +11,12 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.3.2
+
+### Changed
+
+- Consolidated steps `create-sbom` and `upload-sbom` for performance improvement.
+
 ## 0.3.1
 
 ### Fixed

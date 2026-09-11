@@ -6,7 +6,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: image-build, konflux
   labels:
-    app.kubernetes.io/version: 0.3.1
+    app.kubernetes.io/version: 0.3.2
   name: build-image-index-min
 spec:
   description: This takes existing Image Manifests and combines them in an Image Index.
@@ -145,8 +145,8 @@ spec:
       requests:
         cpu: 100m
         memory: 256Mi
-    image: quay.io/konflux-ci/mobster:1.2.1-1782136886@sha256:1374bc35c71781987cce00ef5efe2be42923f83def19b60a570e947189b90d15
-    name: create-sbom
+    image: quay.io/konflux-ci/mobster:2.2.0-1788775240@sha256:7018d4ae1ee1edce1cf65c3506acdbd22949f1fc1583590dfb393cb6757774d4
+    name: create-and-push-sbom
     script: |
       #!/bin/bash
       set -e
@@ -174,17 +174,6 @@ spec:
         --index-manifest-path "$MANIFEST_DATA_FILE"
       )
       mobster "${mobster_args[@]}"
-  - computeResources:
-      limits:
-        memory: 256Mi
-      requests:
-        cpu: 100m
-        memory: 256Mi
-    image: quay.io/konflux-ci/task-runner:2.0.0@sha256:4b01fbf98fa7155f5c21443c285f88853864ae7cc66981cf6b543fc6ba16b81b
-    name: upload-sbom
-    script: |
-      #!/bin/bash
-      set -e
 
       echo "[$(date --utc -Ins)] Update CA trust"
 

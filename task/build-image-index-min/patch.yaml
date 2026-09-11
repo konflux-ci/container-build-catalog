@@ -1,10 +1,9 @@
 - op: replace
   path: /metadata/name
   value: build-image-index-min
-# kustomize build task/build-image-index/0.3| yq '.spec.steps.[].name' | nl -v 0 
+# kustomize build task/build-image-index/ | yq '.spec.steps.[].name' | nl -v 0
 #  0	build
-#  1	create-sbom
-#  2	upload-sbom
+#  1	create-and-push-sbom
 
 
 # build step
@@ -21,10 +20,10 @@
   path: /spec/steps/0/computeResources/requests/cpu
   value: 100m
 
-# create-sbom step
+# create-and-push-sbom step
 - op: test
   path: /spec/steps/1/name
-  value: create-sbom
+  value: create-and-push-sbom
 - op: replace
   path: /spec/steps/1/computeResources/limits/memory
   value: 256Mi
@@ -33,18 +32,4 @@
   value: 256Mi
 - op: replace
   path: /spec/steps/1/computeResources/requests/cpu
-  value: 100m
-
-# upload-sbom step
-- op: test
-  path: /spec/steps/2/name
-  value: upload-sbom
-- op: replace
-  path: /spec/steps/2/computeResources/limits/memory
-  value: 256Mi
-- op: replace
-  path: /spec/steps/2/computeResources/requests/memory
-  value: 256Mi
-- op: replace
-  path: /spec/steps/2/computeResources/requests/cpu
   value: 100m

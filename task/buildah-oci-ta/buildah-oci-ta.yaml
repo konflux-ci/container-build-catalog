@@ -7,7 +7,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: image-build, konflux
   labels:
-    app.kubernetes.io/version: 0.12.1
+    app.kubernetes.io/version: 0.12.2
     build.appstudio.redhat.com/build_type: docker
 spec:
   description: |-
@@ -692,114 +692,11 @@ spec:
           add:
             - SETFCAP
         runAsUser: 0
-    - name: prepare-sboms
-      image: quay.io/konflux-ci/mobster:2.1.0@sha256:3eee4ecf87d50cb073318ab96097b9ea2cb6e5e59dd296a212e57017a9059f61
+    - name: prepare-and-upload-sboms
+      image: quay.io/konflux-ci/mobster:2.2.0-1788775240@sha256:7018d4ae1ee1edce1cf65c3506acdbd22949f1fc1583590dfb393cb6757774d4
       args:
         - --additional-base-images
         - $(params.ADDITIONAL_BASE_IMAGES[*])
-      workingDir: /var/workdir
-      script: |
-        #!/bin/bash
-        set -euo pipefail
-
-        echo "[$(date --utc -Ins)] Prepare SBOM"
-
-        if [ "${SKIP_SBOM_GENERATION}" = "true" ]; then
-          echo "Skipping SBOM generation"
-          exit 0
-        fi
-
-        # Convert Tekton array params into Mobster params
-        ADDITIONAL_BASE_IMAGES=()
-        while [[ $# -gt 0 ]]; do
-          case $1 in
-          --additional-base-images)
-            shift
-            while [[ $# -gt 0 && $1 != --* ]]; do
-              ADDITIONAL_BASE_IMAGES+=("$1")
-              shift
-            done
-            ;;
-          *)
-            echo "unexpected argument: $1" >&2
-            exit 2
-            ;;
-          esac
-        done
-
-        IMAGE_URL="$(cat "$(results.IMAGE_URL.path)")"
-        IMAGE_DIGEST="$(cat "$(results.IMAGE_DIGEST.path)")"
-
-        echo "[$(date --utc -Ins)] Generate SBOM with mobster"
-
-        mobster_args=(
-          generate
-          --output sbom.json
-        )
-
-        # Validation is a flag for `generate`, not `oci-image`, so we need to
-        # handle it before the oci-image arguments
-        if [ "${SBOM_SKIP_VALIDATION}" == "true" ]; then
-          echo "Skipping SBOM validation"
-          mobster_args+=(--skip-validation)
-        fi
-
-        mobster_args+=(
-          oci-image
-          --from-syft /shared/sbom-image.json
-          --image-pullspec "$IMAGE_URL"
-          --image-digest "$IMAGE_DIGEST"
-          --parsed-dockerfile-path "/shared/parsed_dockerfile.json"
-          --base-image-digest-file "/shared/base_images_digests"
-        )
-
-        # Add metadata to the Mobster args if provided
-        metadata_path="/shared/buildprobe-metadata.yaml"
-        builder_metadata_path="/shared/builder-metadata.json"
-        if [ -f "$metadata_path" ]; then
-          mobster_args+=(--metadata-path "$metadata_path")
-        fi
-        if [ -f "$builder_metadata_path" ]; then
-          mobster_args+=(--build-metadata-path "$builder_metadata_path")
-        fi
-
-        if [ -f /shared/sbom-source.json ]; then
-          mobster_args+=(--from-syft /shared/sbom-source.json)
-        fi
-
-        if [ -f /shared/sbom-prefetch.json ]; then
-          mobster_args+=(--from-hermeto /shared/sbom-prefetch.json)
-        fi
-
-        if [ -n "${TARGET_STAGE}" ]; then
-          mobster_args+=(--dockerfile-target "${TARGET_STAGE}")
-        fi
-
-        for ADDITIONAL_BASE_IMAGE in "${ADDITIONAL_BASE_IMAGES[@]}"; do
-          mobster_args+=(--additional-base-image "$ADDITIONAL_BASE_IMAGE")
-        done
-
-        if [ "${CONTEXTUALIZE_SBOM}" == "true" ] && [ "${HERMETIC}" == "false" ]; then
-          mobster_args+=(--contextualize)
-        fi
-
-        if [ -f "/shared/prefetch-arch" ]; then
-          mobster_args+=(--arch "$(cat /shared/prefetch-arch)")
-        fi
-
-        mobster "${mobster_args[@]}"
-
-        echo "[$(date --utc -Ins)] End prepare-sboms"
-      computeResources:
-        limits:
-          memory: 512Mi
-        requests:
-          cpu: 100m
-          memory: 512Mi
-      securityContext:
-        runAsUser: 0
-    - name: upload-sbom
-      image: quay.io/konflux-ci/task-runner:2.0.0@sha256:4b01fbf98fa7155f5c21443c285f88853864ae7cc66981cf6b543fc6ba16b81b
       workingDir: /var/workdir
       volumeMounts:
         - mountPath: /mnt/trusted-ca
@@ -812,23 +709,107 @@ spec:
         #!/bin/bash
         set -euo pipefail
 
-        ca_bundle=/mnt/trusted-ca/ca-bundle.crt
-        if [ -f "$ca_bundle" ]; then
-          echo "INFO: Using mounted CA bundle: $ca_bundle"
-          cp -vf $ca_bundle /etc/pki/ca-trust/source/anchors
-          update-ca-trust
-        fi
+        echo "[$(date --utc -Ins)] Prepare SBOM"
 
         IMAGE_REF=$(cat "$(results.IMAGE_REF.path)")
 
-        # Pre-select the correct credentials to work around cosign not supporting the containers-auth.json spec
-        mkdir -p /tmp/auth && select-oci-auth "$IMAGE_REF" >/tmp/auth/config.json
-        export DOCKER_CONFIG=/tmp/auth
-
-        # --- SBOM upload ---
         if [ "${SKIP_SBOM_GENERATION}" = "true" ]; then
-          echo "Skipping SBOM push because SBOM generation is disabled"
+          echo "Skipping SBOM generation"
         else
+
+          # Convert Tekton array params into Mobster params
+          ADDITIONAL_BASE_IMAGES=()
+          while [[ $# -gt 0 ]]; do
+            case $1 in
+            --additional-base-images)
+              shift
+              while [[ $# -gt 0 && $1 != --* ]]; do
+                ADDITIONAL_BASE_IMAGES+=("$1")
+                shift
+              done
+              ;;
+            *)
+              echo "unexpected argument: $1" >&2
+              exit 2
+              ;;
+            esac
+          done
+
+          IMAGE_URL="$(cat "$(results.IMAGE_URL.path)")"
+          IMAGE_DIGEST="$(cat "$(results.IMAGE_DIGEST.path)")"
+
+          echo "[$(date --utc -Ins)] Generate SBOM with mobster"
+
+          mobster_args=(
+            generate
+            --output sbom.json
+          )
+
+          # Validation is a flag for `generate`, not `oci-image`, so we need to
+          # handle it before the oci-image arguments
+          if [ "${SBOM_SKIP_VALIDATION}" == "true" ]; then
+            echo "Skipping SBOM validation"
+            mobster_args+=(--skip-validation)
+          fi
+
+          mobster_args+=(
+            oci-image
+            --from-syft /shared/sbom-image.json
+            --image-pullspec "$IMAGE_URL"
+            --image-digest "$IMAGE_DIGEST"
+            --parsed-dockerfile-path "/shared/parsed_dockerfile.json"
+            --base-image-digest-file "/shared/base_images_digests"
+          )
+
+          # Add metadata to the Mobster args if provided
+          metadata_path="/shared/buildprobe-metadata.yaml"
+          builder_metadata_path="/shared/builder-metadata.json"
+          if [ -f "$metadata_path" ]; then
+            mobster_args+=(--metadata-path "$metadata_path")
+          fi
+          if [ -f "$builder_metadata_path" ]; then
+            mobster_args+=(--build-metadata-path "$builder_metadata_path")
+          fi
+
+          if [ -f /shared/sbom-source.json ]; then
+            mobster_args+=(--from-syft /shared/sbom-source.json)
+          fi
+
+          if [ -f /shared/sbom-prefetch.json ]; then
+            mobster_args+=(--from-hermeto /shared/sbom-prefetch.json)
+          fi
+
+          if [ -n "${TARGET_STAGE}" ]; then
+            mobster_args+=(--dockerfile-target "${TARGET_STAGE}")
+          fi
+
+          for ADDITIONAL_BASE_IMAGE in "${ADDITIONAL_BASE_IMAGES[@]}"; do
+            mobster_args+=(--additional-base-image "$ADDITIONAL_BASE_IMAGE")
+          done
+
+          if [ "${CONTEXTUALIZE_SBOM}" == "true" ] && [ "${HERMETIC}" == "false" ]; then
+            mobster_args+=(--contextualize)
+          fi
+
+          if [ -f "/shared/prefetch-arch" ]; then
+            mobster_args+=(--arch "$(cat /shared/prefetch-arch)")
+          fi
+
+          mobster "${mobster_args[@]}"
+
+          echo "[$(date --utc -Ins)] End prepare-sboms"
+
+          ca_bundle=/mnt/trusted-ca/ca-bundle.crt
+          if [ -f "$ca_bundle" ]; then
+            echo "INFO: Using mounted CA bundle: $ca_bundle"
+            cp -vf $ca_bundle /etc/pki/ca-trust/source/anchors
+            update-ca-trust
+          fi
+
+          # Pre-select the correct credentials to work around cosign not supporting the containers-auth.json spec
+          mkdir -p /tmp/auth && select-oci-auth "$IMAGE_REF" >/tmp/auth/config.json
+          export DOCKER_CONFIG=/tmp/auth
+
           echo "[$(date --utc -Ins)] Upload SBOM"
           echo "Pushing sbom to registry"
           if ! retry cosign attach sbom --sbom sbom.json --type "$SBOM_TYPE" "$IMAGE_REF"; then
@@ -925,26 +906,27 @@ spec:
           fi
 
           if [ "${SKIP_SBOM_GENERATION}" = "true" ]; then
-            echo "Skipping SBOM signing because SBOM generation is disabled"
-          else
-            ATT_SBOM_TYPE="${SBOM_TYPE}"
-            if [ "${ATT_SBOM_TYPE}" = "spdx" ]; then
-              # for format cossistency with cyclonedx format, we want to use spdxjson instad of spdx
-              # spdx export data as rawstring, we want structured json as cyclonedx
-              ATT_SBOM_TYPE="spdxjson"
-            fi
+            echo "Skipping SBOM signing"
+            exit 0
+          fi
 
-            echo "[$(date --utc -Ins)] Sign SBOM"
-            echo "Signing and attaching SBOM to ${IMAGE_REF} using keyless signing"
-            if ! retry cosign attest -y --type "${ATT_SBOM_TYPE}" --predicate sbom.json \
-              --use-signing-config=false \
-              --rekor-url="${REKOR_URL}" \
-              --fulcio-url="${SIGSTORE_FULCIO_URL}" \
-              --oidc-issuer="${SIGSTORE_OIDC_ISSUER}" \
-              "${IMAGE_REF}"; then
-              echo "Failed to sign SBOM" >&2
-              exit 1
-            fi
+          ATT_SBOM_TYPE="${SBOM_TYPE}"
+          if [ "${ATT_SBOM_TYPE}" = "spdx" ]; then
+            # for format cossistency with cyclonedx format, we want to use spdxjson instad of spdx
+            # spdx export data as rawstring, we want structured json as cyclonedx
+            ATT_SBOM_TYPE="spdxjson"
+          fi
+
+          echo "[$(date --utc -Ins)] Sign SBOM"
+          echo "Signing and attaching SBOM to ${IMAGE_REF} using keyless signing"
+          if ! retry cosign attest -y --type "${ATT_SBOM_TYPE}" --predicate sbom.json \
+            --use-signing-config=false \
+            --rekor-url="${REKOR_URL}" \
+            --fulcio-url="${SIGSTORE_FULCIO_URL}" \
+            --oidc-issuer="${SIGSTORE_OIDC_ISSUER}" \
+            "${IMAGE_REF}"; then
+            echo "Failed to sign SBOM" >&2
+            exit 1
           fi
         fi
 
@@ -952,11 +934,9 @@ spec:
         echo "[$(date --utc -Ins)] End upload-sbom"
       computeResources:
         limits:
-          cpu: 100m
-          memory: 256Mi
+          memory: 512Mi
         requests:
           cpu: 100m
-          memory: 256Mi
+          memory: 512Mi
       securityContext:
-        runAsNonRoot: false
         runAsUser: 0

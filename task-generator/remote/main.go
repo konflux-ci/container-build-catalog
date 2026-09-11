@@ -23,13 +23,14 @@ import (
 	"strings"
 
 	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
+	"github.com/zregvart/tkn-fmt/format"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/cli-runtime/pkg/printers"
 	klog "k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/yaml"
 )
 
 func main() {
@@ -56,14 +57,19 @@ func main() {
 	decodingScheme := runtime.NewScheme()
 	utilruntime.Must(tektonapi.AddToScheme(decodingScheme))
 	convertToSsh(&task)
-	y := printers.YAMLPrinter{}
-	b := bytes.Buffer{}
-	_ = y.PrintObj(&task, &b)
-	err := os.MkdirAll(filepath.Dir(buildahRemoteTask), 0755) //#nosec G301 -- all the dirs in the repo are 755
+	encoded, err := yaml.Marshal(&task)
 	if err != nil {
 		panic(err)
 	}
-	err = os.WriteFile(buildahRemoteTask, b.Bytes(), 0660) //#nosec
+	var out bytes.Buffer
+	if err := format.Format(bytes.NewReader(encoded), &out); err != nil {
+		panic(err)
+	}
+	err = os.MkdirAll(filepath.Dir(buildahRemoteTask), 0755) //#nosec G301 -- all the dirs in the repo are 755
+	if err != nil {
+		panic(err)
+	}
+	err = os.WriteFile(buildahRemoteTask, out.Bytes(), 0660) //#nosec
 	if err != nil {
 		panic(err)
 	}
