@@ -25,7 +25,7 @@ When prefetch-dependencies task is activated it is using its artifacts to run bu
 |ADDITIONAL_SECRET|Name of a secret which will be made available to the build with 'buildah build --secret' at /run/secrets/$ADDITIONAL_SECRET|does-not-exist|false|
 |BUILD_ARGS|Array of --build-arg values ("arg=value" strings)|[]|false|
 |ENV_VARS|Array of --env values ("env=value" strings)|[]|false|
-|BUILD_ARGS_FILE|Path to a file with build arguments, see https://www.mankier.com/1/buildah-build#--build-arg-file|""|false|
+|BUILD_ARGS_FILES|Array of paths to files with build arguments, see https://www.mankier.com/1/buildah-build#--build-arg-file|[]|false|
 |caTrustConfigMapName|The name of the ConfigMap to read CA bundle data from.|trusted-ca|false|
 |caTrustConfigMapKey|The name of the key in the ConfigMap that contains the CA bundle data.|ca-bundle.crt|false|
 |ICM_KEEP_COMPAT_LOCATION|Whether to keep compatibility location at /root/buildinfo/ for ICM injection|true|false|
