@@ -11,6 +11,13 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.13.0
+
+### Changed
+
+- The `build` step now supports the `--build-args-files` flag. This flag allows
+  passing multiple build arguments files as it is the case with buildah itself.
+
 ## 0.12.1
 
 ### Fixed
