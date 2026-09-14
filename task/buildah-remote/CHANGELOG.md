@@ -11,6 +11,13 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.13.0
+
+### Changed
+
+The `BUILD_ARGS_FILE` parameter was renamed to `BUILD_ARGS_FILES` and allows
+passing multiple build arguments files as buildah itself does.
+
 ## 0.12.3
 
 ### Changed
@@ -23,6 +30,7 @@ If that's not something you ever plan to do, consider removing this section.
 ## 0.12.2
 
 ### Removed
+
 - Removed the SSH port forwarding from decommissioned JVM Build Service artifact cache
   (`JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR`) from the remote build. This is just cleanup of unused code.
 
@@ -355,6 +363,7 @@ of use cases. All known (minor) differences documented below.
 ## 0.9
 
 ### Removed
+
 - BREAKING: Support for Dockerfile downloading in Konflux Build Pipeline.
 
 ## 0.8.3
