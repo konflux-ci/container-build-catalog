@@ -187,7 +187,7 @@ if ! [[ $IS_LOCALHOST ]]; then
 Host *
   ControlMaster auto
   ControlPath ~/.ssh/control-%C
-  ControlPersist 60m
+  ControlPersist yes # should persist for the lifetime of the task pod
 SSHCONFIGEOF
   chmod 0600 ~/.ssh/config
 
