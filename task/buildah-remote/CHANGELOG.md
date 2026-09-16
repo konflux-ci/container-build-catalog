@@ -11,6 +11,15 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.12.2
+
+### Changed
+
+- All `ssh` and `rsync` invocations to the build VM now share a single ssh
+  connection. The build step writes an `~/.ssh/config` with `ControlMaster auto`,
+  `ControlPath` and `ControlPersist`, so only the first invocation pays the cost
+  of the TCP handshake, key exchange and authentication.
+
 ## 0.12.1
 
 ### Changed

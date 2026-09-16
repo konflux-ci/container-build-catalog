@@ -179,6 +179,18 @@ if ! [[ $IS_LOCALHOST ]]; then
   fi
 
   chmod 0400 ~/.ssh/id_rsa
+
+  # Share a single ssh connection to the build VM between every ssh and rsync
+  # invocation below. ControlMaster only multiplexes if a ControlPath is set,
+  # and ControlPersist keeps the master alive between invocations.
+  cat >~/.ssh/config <<'SSHCONFIGEOF'
+Host *
+  ControlMaster auto
+  ControlPath ~/.ssh/control-%C
+  ControlPersist yes # should persist for the lifetime of the task pod
+SSHCONFIGEOF
+  chmod 0600 ~/.ssh/config
+
   BUILD_DIR=$(cat /ssh/user-dir)
   export BUILD_DIR
   export SSH_ARGS="-o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=10"
