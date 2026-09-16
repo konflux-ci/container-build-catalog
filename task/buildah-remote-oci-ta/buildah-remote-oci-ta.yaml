@@ -5,7 +5,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: image-build, konflux
   labels:
-    app.kubernetes.io/version: 0.12.1
+    app.kubernetes.io/version: 0.13.0
     build.appstudio.redhat.com/build_type: docker
   name: buildah-remote-oci-ta
 spec:
@@ -56,10 +56,10 @@ spec:
     description: Array of --build-arg values ("arg=value" strings)
     name: BUILD_ARGS
     type: array
-  - default: ""
-    description: Path to a file with build arguments, see https://www.mankier.com/1/buildah-build#--build-arg-file
-    name: BUILD_ARGS_FILE
-    type: string
+  - default: []
+    description: Array of paths to files with build arguments, see https://www.mankier.com/1/buildah-build#--build-arg-file
+    name: BUILD_ARGS_FILES
+    type: array
   - default: ""
     description: Defines the single build time for all buildah builds in seconds since
       UNIX epoch. Conflicts with SOURCE_DATE_EPOCH.
@@ -300,8 +300,6 @@ spec:
       value: $(params.ALLOW_CROSS_PLATFORM_IMAGES)
     - name: ANNOTATIONS_FILE
       value: $(params.ANNOTATIONS_FILE)
-    - name: BUILD_ARGS_FILE
-      value: $(params.BUILD_ARGS_FILE)
     - name: BUILD_TIMESTAMP
       value: $(params.BUILD_TIMESTAMP)
     - name: CONTEXT
@@ -359,7 +357,7 @@ spec:
     - name: YUM_REPOS_D_TARGET
       value: $(params.YUM_REPOS_D_TARGET)
     - name: BUILDER_IMAGE
-      value: quay.io/konflux-ci/konflux-build-cli@sha256:85141954209ee158fe9e559869a0da196ff08c5d4bb15b1a6c2e54d4fcd6b52f
+      value: quay.io/konflux-ci/konflux-build-cli@sha256:0625ab9247be0c02cdb2e0d3e10c956f6c67329db54f44debe5f087bb8a771b3
     - name: PLATFORM
       value: $(params.PLATFORM)
     - name: IMAGE_APPEND_PLATFORM
@@ -386,6 +384,8 @@ spec:
   - args:
     - --build-args
     - $(params.BUILD_ARGS[*])
+    - --build-args-files
+    - $(params.BUILD_ARGS_FILES[*])
     - --envs
     - $(params.ENV_VARS[*])
     - --labels
@@ -420,7 +420,7 @@ spec:
       value: $(params.SOURCE_DATE_EPOCH)
     - name: BUILDAH_REWRITE_TIMESTAMP
       value: $(params.REWRITE_TIMESTAMP)
-    image: quay.io/konflux-ci/konflux-build-cli@sha256:85141954209ee158fe9e559869a0da196ff08c5d4bb15b1a6c2e54d4fcd6b52f
+    image: quay.io/konflux-ci/konflux-build-cli@sha256:0625ab9247be0c02cdb2e0d3e10c956f6c67329db54f44debe5f087bb8a771b3
     name: build
     script: |-
       #!/bin/bash
@@ -557,9 +557,25 @@ spec:
         ANNOTATIONS_FILE=$(realpath "${SOURCE_CODE_DIR}/${ANNOTATIONS_FILE}")
       fi
 
-      if [ -n "${BUILD_ARGS_FILE}" ]; then
-        BUILD_ARGS_FILE=$(realpath "${SOURCE_CODE_DIR}/${BUILD_ARGS_FILE}")
-      fi
+      resolved_build_args_files=()
+      while [[ $# -gt 0 ]]; do
+        case "$1" in
+        --build-args-files)
+          shift
+          # Consume following non-flags (file1 file2 ...) until the next flag.
+          while [[ $# -gt 0 && "$1" != -* ]]; do
+            resolved_build_args_files+=(--build-args-files "$(realpath "${SOURCE_CODE_DIR}/$1")")
+            shift
+          done
+          ;;
+        *)
+          resolved_build_args_files+=("$1")
+          shift
+          ;;
+        esac
+      done
+      # Replace $@ so the later "$@" on konflux-build-cli image build uses the rewritten argv.
+      set -- "${resolved_build_args_files[@]}"
 
       # Necessary for newer version of buildah if the host system does not contain up to date version of container-selinux
       # TODO remove the option once all hosts were updated
@@ -661,7 +677,6 @@ spec:
         --image-source "$SOURCE_URL"
         --image-revision "$COMMIT_SHA"
         --quay-image-expires-after "$IMAGE_EXPIRES_AFTER"
-        --build-args-file "$BUILD_ARGS_FILE"
         --annotations-file "$ANNOTATIONS_FILE"
         --legacy-build-timestamp "$BUILD_TIMESTAMP"
         --add-legacy-labels
@@ -687,7 +702,7 @@ spec:
         --src-tls-verify="$TLSVERIFY"
         --dest-tls-verify="$TLSVERIFY"
         --allow-cross-platform-images="$ALLOW_CROSS_PLATFORM_IMAGES"
-        "$@" # --annotations, --labels, --envs, --build-args
+        "$@" # --annotations, --labels, --envs, --build-args, --build-args-files
       )
 
       echo "[$(date --utc -Ins)] $(printf '%q ' "${cmd[@]}")"
@@ -737,7 +752,6 @@ spec:
           -e ADD_CAPABILITIES="${ADD_CAPABILITIES@Q}" \
           -e ALLOW_CROSS_PLATFORM_IMAGES="${ALLOW_CROSS_PLATFORM_IMAGES@Q}" \
           -e ANNOTATIONS_FILE="${ANNOTATIONS_FILE@Q}" \
-          -e BUILD_ARGS_FILE="${BUILD_ARGS_FILE@Q}" \
           -e BUILD_TIMESTAMP="${BUILD_TIMESTAMP@Q}" \
           -e CONTEXT="${CONTEXT@Q}" \
           -e CONTEXTUALIZE_SBOM="${CONTEXTUALIZE_SBOM@Q}" \

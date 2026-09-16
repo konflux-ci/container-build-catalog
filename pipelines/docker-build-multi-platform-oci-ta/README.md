@@ -8,7 +8,7 @@ This pipeline is pushed as a Tekton bundle to [quay.io](https://quay.io/reposito
 |name|description|default value|used in (taskname:taskparam)|
 |---|---|---|---|
 |build-args| Array of --build-arg values ("arg=value" strings) for buildah| []| build-images:BUILD_ARGS|
-|build-args-file| Path to a file with build arguments for buildah, see https://www.mankier.com/1/buildah-build#--build-arg-file| | build-images:BUILD_ARGS_FILE|
+|build-args-files| Array of paths to files with build arguments for buildah, see https://www.mankier.com/1/buildah-build#--build-arg-file| []| build-images:BUILD_ARGS_FILES|
 |build-image-index| Add built image into an OCI image index| true| build-image-index:ALWAYS_BUILD_INDEX|
 |build-platforms| List of platforms to build the container images on. The available set of values is determined by the configuration of the multi-platform-controller.| ['linux/x86_64']| |
 |build-source-image| Build a source image.| false| |
@@ -64,7 +64,7 @@ This pipeline is pushed as a Tekton bundle to [quay.io](https://quay.io/reposito
 |ANNOTATIONS_FILE| Path to a file with additional key=value annotations that should be applied to the image| ""| |
 |BUILDAH_FORMAT| The format for the resulting image's mediaType. Valid values are oci (default) or docker.| oci| '$(params.buildah-format)'|
 |BUILD_ARGS| Array of --build-arg values ("arg=value" strings)| []| '['$(params.build-args[*])']'|
-|BUILD_ARGS_FILE| Path to a file with build arguments, see https://www.mankier.com/1/buildah-build#--build-arg-file| ""| '$(params.build-args-file)'|
+|BUILD_ARGS_FILES| Array of paths to files with build arguments, see https://www.mankier.com/1/buildah-build#--build-arg-file| []| '['$(params.build-args-files[*])']'|
 |BUILD_TIMESTAMP| Defines the single build time for all buildah builds in seconds since UNIX epoch. Conflicts with SOURCE_DATE_EPOCH.| ""| |
 |CACHI2_ARTIFACT| The Trusted Artifact URI pointing to the artifact with the prefetched dependencies.| ""| '$(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)'|
 |COMMIT_SHA| The image is built from this commit.| ""| '$(tasks.clone-repository.results.commit)'|

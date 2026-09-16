@@ -8,7 +8,7 @@ This pipeline is pushed as a Tekton bundle to [quay.io](https://quay.io/reposito
 |name|description|default value|used in (taskname:taskparam)|
 |---|---|---|---|
 |build-args| Array of --build-arg values ("arg=value" strings) for buildah| []| build-container:BUILD_ARGS|
-|build-args-file| Path to a file with build arguments for buildah, see https://www.mankier.com/1/buildah-build#--build-arg-file| | build-container:BUILD_ARGS_FILE|
+|build-args-files| Array of paths to files with build arguments for buildah, see https://www.mankier.com/1/buildah-build#--build-arg-file| []| build-container:BUILD_ARGS_FILES|
 |build-image-index| Add built image into an OCI image index| false| build-image-index:ALWAYS_BUILD_INDEX|
 |build-source-image| Build a source image.| false| |
 |buildah-format| The format for the resulting image's mediaType. Valid values are oci or docker.| docker| build-container:BUILDAH_FORMAT ; build-image-index:BUILDAH_FORMAT|
@@ -63,7 +63,7 @@ This pipeline is pushed as a Tekton bundle to [quay.io](https://quay.io/reposito
 |ANNOTATIONS_FILE| Path to a file with additional key=value annotations that should be applied to the image| ""| |
 |BUILDAH_FORMAT| The format for the resulting image's mediaType. Valid values are oci (default) or docker.| oci| '$(params.buildah-format)'|
 |BUILD_ARGS| Array of --build-arg values ("arg=value" strings)| []| '['$(params.build-args[*])']'|
-|BUILD_ARGS_FILE| Path to a file with build arguments, see https://www.mankier.com/1/buildah-build#--build-arg-file| ""| '$(params.build-args-file)'|
+|BUILD_ARGS_FILES| Array of paths to files with build arguments, see https://www.mankier.com/1/buildah-build#--build-arg-file| []| '['$(params.build-args-files[*])']'|
 |BUILD_TIMESTAMP| Defines the single build time for all buildah builds in seconds since UNIX epoch. Conflicts with SOURCE_DATE_EPOCH.| ""| |
 |COMMIT_SHA| The image is built from this commit.| ""| '$(tasks.clone-repository.results.commit)'|
 |CONTEXT| Path to the directory to use as context.| .| '$(params.path-context)'|
