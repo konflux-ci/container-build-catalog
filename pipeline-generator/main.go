@@ -61,6 +61,16 @@ func main() {
 		backupDir:    backupDir,
 		formatBackup: formatBackup,
 	}))
+
+	tektonBundleBuilder := exitOnError(readPipeline(p("tekton-bundle-builder/tekton-bundle-builder.yaml")))
+
+	exitOnError(generate(genArgs{
+		fn:           GenerateTektonBundleBuilderOciTa,
+		source:       tektonBundleBuilder,
+		destPath:     p("tekton-bundle-builder-oci-ta/tekton-bundle-builder-oci-ta.yaml"),
+		backupDir:    backupDir,
+		formatBackup: formatBackup,
+	}))
 }
 
 func exitOnError[T any](v T, e error) T {
