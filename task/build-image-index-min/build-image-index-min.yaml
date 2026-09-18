@@ -6,7 +6,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: image-build, konflux
   labels:
-    app.kubernetes.io/version: 0.3.1
+    app.kubernetes.io/version: "0.4"
   name: build-image-index-min
 spec:
   description: This takes existing Image Manifests and combines them in an Image Index.
@@ -21,6 +21,14 @@ spec:
     type: string
   - description: List of Image Manifests to be referenced by the Image Index
     name: IMAGES
+    type: array
+  - default: []
+    description: Optional per-image platform mapping as 'imageRef=os/arch' entries
+      (e.g. 'quay.io/org/repo@sha256:aaa=linux/amd64'). Used to set the platform on
+      each index entry explicitly, which is required for OCI artifacts whose empty
+      config carries no platform information. When empty, platforms are left to buildah's
+      inference (unchanged behaviour).
+    name: IMAGE_PLATFORM_MAP
     type: array
   - default: "true"
     description: Build an image index even if IMAGES is of length 1. Default true.
@@ -89,6 +97,9 @@ spec:
       readOnly: true
   steps:
   - args:
+    - --image-platform-map
+    - $(params.IMAGE_PLATFORM_MAP[*])
+    - --images
     - $(params.IMAGES[*])
     computeResources:
       limits:
@@ -96,13 +107,14 @@ spec:
       requests:
         cpu: 100m
         memory: 256Mi
-    image: quay.io/konflux-ci/konflux-build-cli@sha256:85141954209ee158fe9e559869a0da196ff08c5d4bb15b1a6c2e54d4fcd6b52f
+    image: quay.io/konflux-ci/konflux-build-cli@sha256:337cc9e8f2a3e2d3756119e3abc7baa3a9114a7357c8f45c6937445055b4b7f3
     name: build
     script: |
       #!/bin/bash
       # Fixing group permission on /var/lib/containers
       set -eu
       set -o pipefail
+
       chown root:root /var/lib/containers
 
       sed -i 's/^\s*short-name-mode\s*=\s*.*/short-name-mode = "disabled"/' /etc/containers/registries.conf
@@ -119,6 +131,7 @@ spec:
       MANIFEST_DATA_FILE="/index-build-data/manifest_data.json"
 
       echo "Running konflux-build-cli"
+      # shellcheck disable=SC2153  # IMAGE is provided via the step env, not assigned here
       if ! konflux-build-cli image build-image-index \
         --image "$IMAGE" \
         --tls-verify="$TLSVERIFY" \
@@ -130,7 +143,7 @@ spec:
         --result-path-image-url "$(results.IMAGE_URL.path)" \
         --result-path-image-ref "$(results.IMAGE_REF.path)" \
         --result-path-images "$(results.IMAGES.path)" \
-        --images "$@"; then
+        "$@"; then
         echo "Failed to build image index"
         exit 1
       fi

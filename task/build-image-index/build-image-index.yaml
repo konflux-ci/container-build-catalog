@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   labels:
-    app.kubernetes.io/version: 0.3.1
+    app.kubernetes.io/version: "0.4"
   annotations:
     tekton.dev/pipelines.minVersion: "0.12.1"
     tekton.dev/tags: "image-build, konflux"
@@ -21,6 +21,15 @@ spec:
   - name: IMAGES
     description: List of Image Manifests to be referenced by the Image Index
     type: array
+  - name: IMAGE_PLATFORM_MAP
+    description: >-
+      Optional per-image platform mapping as 'imageRef=os/arch' entries
+      (e.g. 'quay.io/org/repo@sha256:aaa=linux/amd64'). Used to set the
+      platform on each index entry explicitly, which is required for OCI
+      artifacts whose empty config carries no platform information. When
+      empty, platforms are left to buildah's inference (unchanged behaviour).
+    type: array
+    default: []
   - name: ALWAYS_BUILD_INDEX
     description: Build an image index even if IMAGES is of length 1. Default true. If the image index generation is skipped, the task will forward values for params.IMAGES[0] to results.IMAGE_*. In order to properly set all results, use the repository:tag@sha256:digest format for the IMAGES parameter.
     type: string
@@ -90,7 +99,7 @@ spec:
         mountPath: /mnt/trusted-ca
         readOnly: true
   steps:
-  - image: quay.io/konflux-ci/konflux-build-cli@sha256:85141954209ee158fe9e559869a0da196ff08c5d4bb15b1a6c2e54d4fcd6b52f
+  - image: quay.io/konflux-ci/konflux-build-cli@sha256:337cc9e8f2a3e2d3756119e3abc7baa3a9114a7357c8f45c6937445055b4b7f3
     # per https://kubernetes.io/docs/concepts/containers/images/#imagepullpolicy-defaulting
     # the cluster will set imagePullPolicy to IfNotPresent
     name: build
@@ -100,12 +109,21 @@ spec:
       requests:
         memory: 4Gi
         cpu: 250m
-    args: ["$(params.IMAGES[*])"]
+    # Array params must travel via args, not script interpolation.
+    # konflux-build-cli's ExpandArrayParameters already accepts the
+    # "--flag v1 v2 --flag2 v1 v2" form, so these are forwarded to it
+    # unmodified via "$@" below.
+    args:
+      - "--image-platform-map"
+      - "$(params.IMAGE_PLATFORM_MAP[*])"
+      - "--images"
+      - "$(params.IMAGES[*])"
     script: |
       #!/bin/bash
       # Fixing group permission on /var/lib/containers
       set -eu
       set -o pipefail
+
       chown root:root /var/lib/containers
 
       sed -i 's/^\s*short-name-mode\s*=\s*.*/short-name-mode = "disabled"/' /etc/containers/registries.conf
@@ -122,6 +140,7 @@ spec:
       MANIFEST_DATA_FILE="/index-build-data/manifest_data.json"
 
       echo "Running konflux-build-cli"
+      # shellcheck disable=SC2153  # IMAGE is provided via the step env, not assigned here
       if ! konflux-build-cli image build-image-index \
         --image "$IMAGE" \
         --tls-verify="$TLSVERIFY" \
@@ -133,7 +152,7 @@ spec:
         --result-path-image-url "$(results.IMAGE_URL.path)" \
         --result-path-image-ref "$(results.IMAGE_REF.path)" \
         --result-path-images "$(results.IMAGES.path)" \
-        --images "$@"; then
+        "$@"; then
         echo "Failed to build image index"
         exit 1
       fi
