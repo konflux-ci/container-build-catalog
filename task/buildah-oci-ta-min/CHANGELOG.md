@@ -11,6 +11,11 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.12.2
+
+### Changed
+- Bumped version because of `buildah-remote` and `buildah-remote-oci-ta`
+
 ## 0.12.1
 
 ### Fixed

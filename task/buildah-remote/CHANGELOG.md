@@ -11,6 +11,14 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.12.2
+
+### Removed
+- Removed the SSH port forwarding for the JVM Build Service artifact cache
+  (`JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR`) from the remote build.
+  The build VM no longer forwards port 80 to the cache, nor sets the corresponding
+  environment variable in the `podman run` invocation.
+
 ## 0.12.1
 
 ### Changed
