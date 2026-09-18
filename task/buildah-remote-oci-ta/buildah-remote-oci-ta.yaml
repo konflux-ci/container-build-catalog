@@ -470,13 +470,6 @@ spec:
         # shellcheck disable=SC2086
         ssh $SSH_ARGS "$SSH_HOST"  mkdir -p "${BUILD_DIR@Q}/workspaces" "${BUILD_DIR@Q}/scripts" "${BUILD_DIR@Q}/volumes"
 
-        PORT_FORWARD=""
-        PODMAN_PORT_FORWARD=""
-        if [ -n "$JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR" ] ; then
-          PORT_FORWARD=" -L 80:$JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR:80"
-          PODMAN_PORT_FORWARD=" -e JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR=localhost"
-        fi
-
         echo "[$(date --utc -Ins)] Rsync data"
 
         rsync --timeout=300 -razW /shared/ "$SSH_HOST:$BUILD_DIR/volumes/shared/"
@@ -731,7 +724,7 @@ spec:
         # shellcheck disable=SC2086
         # Please note: all variables below the first ssh line must be quoted with ${var@Q}!
         # See https://stackoverflow.com/questions/6592376/prevent-ssh-from-breaking-up-shell-script-parameters
-        ssh $SSH_ARGS "$SSH_HOST" $PORT_FORWARD podman  run $PODMAN_PORT_FORWARD \
+        ssh $SSH_ARGS "$SSH_HOST" podman  run \
           --tmpfs /run/secrets \
           -e ADDITIONAL_SECRET="${ADDITIONAL_SECRET@Q}" \
           -e ADD_CAPABILITIES="${ADD_CAPABILITIES@Q}" \

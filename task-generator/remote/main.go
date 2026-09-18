@@ -186,19 +186,10 @@ if ! [[ $IS_LOCALHOST ]]; then
   # shellcheck disable=SC2086
   ssh $SSH_ARGS "$SSH_HOST"  mkdir -p "${BUILD_DIR@Q}/workspaces" "${BUILD_DIR@Q}/scripts" "${BUILD_DIR@Q}/volumes"
 
-  PORT_FORWARD=""
-  PODMAN_PORT_FORWARD=""
-  if [ -n "$JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR" ] ; then
-    PORT_FORWARD=" -L 80:$JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR:80"
-    PODMAN_PORT_FORWARD=" -e JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR=localhost"
-  fi
-
   echo "[$(date --utc -Ins)] Rsync data"
 `
-		env := "$PODMAN_PORT_FORWARD \\\n"
-
 		// disable podman subscription-manager integration
-		env += "    --tmpfs /run/secrets \\\n"
+		env := "\\\n    --tmpfs /run/secrets \\\n"
 
 		// Before the build we sync the contents of the workspace to the remote host
 		for _, workspace := range task.Spec.Workspaces {
@@ -278,7 +269,7 @@ if ! [[ $IS_LOCALHOST ]]; then
 		ret += "\n  # shellcheck disable=SC2086"
 		ret += "\n  # Please note: all variables below the first ssh line must be quoted with ${var@Q}!"
 		ret += "\n  # See https://stackoverflow.com/questions/6592376/prevent-ssh-from-breaking-up-shell-script-parameters"
-		ret += "\n  ssh $SSH_ARGS \"$SSH_HOST\" $PORT_FORWARD podman  run " + env + "" + podmanArgs + "    --user=0 \"${PODMAN_NVIDIA_ARGS[@]@Q}\" --rm --entrypoint='' \"${BUILDER_IMAGE@Q}\" /" + containerScript + ` "${@@Q}"`
+		ret += "\n  ssh $SSH_ARGS \"$SSH_HOST\" podman  run " + env + "" + podmanArgs + "    --user=0 \"${PODMAN_NVIDIA_ARGS[@]@Q}\" --rm --entrypoint='' \"${BUILDER_IMAGE@Q}\" /" + containerScript + ` "${@@Q}"`
 
 		// Sync the contents of the volumes back so subsequent tasks can use them
 		ret += "\n  echo \"[$(date --utc -Ins)] Rsync back\""
