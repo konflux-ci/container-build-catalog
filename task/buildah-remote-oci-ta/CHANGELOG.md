@@ -11,6 +11,12 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.12.2
+
+### Removed
+- Removed the SSH port forwarding from decommissioned JVM Build Service artifact cache
+  (`JVM_BUILD_WORKSPACE_ARTIFACT_CACHE_PORT_80_TCP_ADDR`) from the remote build. This is just cleanup of unused code.
+
 ## 0.12.1
 
 ### Changed
