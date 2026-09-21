@@ -5,7 +5,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: image-build, konflux
   labels:
-    app.kubernetes.io/version: 0.12.2
+    app.kubernetes.io/version: 0.12.3
     build.appstudio.redhat.com/build_type: docker
   name: buildah-remote
 spec:
@@ -448,7 +448,7 @@ spec:
       Host *
         ControlMaster auto
         ControlPath ~/.ssh/control-%C
-        ControlPersist 60m
+        ControlPersist yes # should persist for the lifetime of the task pod
       SSHCONFIGEOF
         chmod 0600 ~/.ssh/config
 

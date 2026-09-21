@@ -9,6 +9,10 @@ When you make changes without bumping the version right away, document them here
 If that's not something you ever plan to do, consider removing this section.
 -->
 
+*Nothing yet.*
+
+## 0.12.3
+
 ### Changed
 
 - All `ssh` and `rsync` invocations to the build VM now share a single ssh
