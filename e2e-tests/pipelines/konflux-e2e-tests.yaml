@@ -171,9 +171,9 @@ spec:
             value: e2e-tests/tasks/container-build-catalog-e2e.yaml
       params:
         - name: git-url
-          value: "https://github.com/konflux-ci/container-build-catalog.git"
+          value: "$(tasks.prepare-e2e.results.git-url)"
         - name: git-revision
-          value: main
+          value: "$(tasks.prepare-e2e.results.git-revision)"
         - name: oci-container
           value: $(params.oci-container-repo):$(context.pipelineRun.name)
         - name: cluster-access-secret-name
