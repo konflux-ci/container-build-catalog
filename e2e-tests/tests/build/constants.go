@@ -16,7 +16,7 @@ const (
 
 var (
 	additionalTags            = []string{"test-tag1", "test-tag2"}
-	githubOrg                 = utils.GetEnv(constants.GITHUB_E2E_ORGANIZATION_ENV, "redhat-appstudio-qe")
+	githubOrg                 = utils.GetEnv(constants.GITHUB_E2E_ORGANIZATION_ENV, "chmeliik")
 	gitlabOrg                 = utils.GetEnv(constants.GITLAB_QE_ORG_ENV, "konflux-qe")
 	gitlabBasicAuthSecretName = "gitlab-basic-auth-secret-" + util.GenerateRandomString(4)
 )
