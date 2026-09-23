@@ -332,7 +332,7 @@ spec:
       value: $(context.taskRun.name)
     imagePullPolicy: IfNotPresent
   steps:
-  - image: quay.io/konflux-ci/konflux-build-cli@sha256:85141954209ee158fe9e559869a0da196ff08c5d4bb15b1a6c2e54d4fcd6b52f
+  - image: quay.io/konflux-ci/konflux-build-cli@sha256:ab28801294c1adbfd70cb8f80ce7e5aef4d140056827000852ec2b1e0ee91a14
     name: build
     computeResources:
       limits:
