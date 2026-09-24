@@ -25,16 +25,16 @@ spec:
     - name: BINARY_IMAGE_DIGEST
       description: Digest of the binary image.
       type: string
-    - name: CACHI2_ARTIFACT
-      description: The Trusted Artifact URI pointing to the artifact with
-        the prefetched dependencies.
-      type: string
-      default: ""
     - name: IGNORE_UNSIGNED_IMAGE
       description: When set to "true", source build task won't fail when source
         image is missing signatures (this can be used for development)
       type: string
       default: "false"
+    - name: PREFETCH_ARTIFACT
+      description: The Trusted Artifact URI pointing to the artifact with
+        the prefetched dependencies.
+      type: string
+      default: ""
     - name: SOURCE_ARTIFACT
       description: The Trusted Artifact URI pointing to the artifact with
         the application source code.
@@ -91,7 +91,7 @@ spec:
       args:
         - use
         - $(params.SOURCE_ARTIFACT)=/var/workdir/source
-        - $(params.CACHI2_ARTIFACT)=/var/workdir/cachi2
+        - $(params.PREFETCH_ARTIFACT)=/var/workdir/cachi2
     - name: get-base-images
       image: quay.io/konflux-ci/task-runner:1.8.1@sha256:b9ef0479b57a494368a12a02886c650314c9ac7391c6228f21065865aab71c9e
       env:

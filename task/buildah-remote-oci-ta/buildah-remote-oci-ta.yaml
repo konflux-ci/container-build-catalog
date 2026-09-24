@@ -66,11 +66,6 @@ spec:
     name: BUILD_TIMESTAMP
     type: string
   - default: ""
-    description: The Trusted Artifact URI pointing to the artifact with the prefetched
-      dependencies.
-    name: CACHI2_ARTIFACT
-    type: string
-  - default: ""
     description: The image is built from this commit.
     name: COMMIT_SHA
     type: string
@@ -138,6 +133,11 @@ spec:
     description: Omit build history information from the resulting image. Improves
       reproducibility by excluding timestamps and layer metadata.
     name: OMIT_HISTORY
+    type: string
+  - default: ""
+    description: The Trusted Artifact URI pointing to the artifact with the prefetched
+      dependencies.
+    name: PREFETCH_ARTIFACT
     type: string
   - default: ""
     description: In case it is not empty, the prefetched content should be made available
@@ -374,7 +374,7 @@ spec:
   - args:
     - use
     - $(params.SOURCE_ARTIFACT)=/var/workdir/source
-    - $(params.CACHI2_ARTIFACT)=/var/workdir/cachi2
+    - $(params.PREFETCH_ARTIFACT)=/var/workdir/cachi2
     computeResources: {}
     image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:7b4f5bbf8b8aa663beaf18bfef4fd16ba1cb5ce846d1fc776a64b312c52ee28c
     name: use-trusted-artifact

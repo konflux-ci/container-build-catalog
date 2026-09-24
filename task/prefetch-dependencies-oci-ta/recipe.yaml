@@ -26,7 +26,7 @@ additionalSteps:
       #!/bin/bash
 
       echo -n "${SOURCE_ARTIFACT}" > "$(results.SOURCE_ARTIFACT.path)"
-      echo -n "" > "$(results.CACHI2_ARTIFACT.path)"
+      echo -n "" > "$(results.PREFETCH_ARTIFACT.path)"
 stepWhen:
   use-trusted-artifact:
     - input: $(params.input)

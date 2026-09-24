@@ -68,11 +68,6 @@ spec:
         seconds since UNIX epoch. Conflicts with SOURCE_DATE_EPOCH.
       type: string
       default: ""
-    - name: CACHI2_ARTIFACT
-      description: The Trusted Artifact URI pointing to the artifact with
-        the prefetched dependencies.
-      type: string
-      default: ""
     - name: COMMIT_SHA
       description: The image is built from this commit.
       type: string
@@ -144,6 +139,11 @@ spec:
         Improves reproducibility by excluding timestamps and layer metadata.
       type: string
       default: "false"
+    - name: PREFETCH_ARTIFACT
+      description: The Trusted Artifact URI pointing to the artifact with
+        the prefetched dependencies.
+      type: string
+      default: ""
     - name: PREFETCH_INPUT
       description: In case it is not empty, the prefetched content should
         be made available to the build.
@@ -413,7 +413,7 @@ spec:
       args:
         - use
         - $(params.SOURCE_ARTIFACT)=/var/workdir/source
-        - $(params.CACHI2_ARTIFACT)=/var/workdir/cachi2
+        - $(params.PREFETCH_ARTIFACT)=/var/workdir/cachi2
       volumeMounts:
         - mountPath: /etc/pki/tls/certs/ca-custom-bundle.crt
           name: trusted-ca

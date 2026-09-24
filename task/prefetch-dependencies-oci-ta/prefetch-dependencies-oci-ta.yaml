@@ -79,7 +79,7 @@ spec:
         cyclonedx.'
       default: spdx
   results:
-    - name: CACHI2_ARTIFACT
+    - name: PREFETCH_ARTIFACT
       description: The Trusted Artifact URI pointing to the artifact with
         the prefetched dependencies.
       type: string
@@ -138,7 +138,7 @@ spec:
         #!/bin/bash
 
         echo -n "${SOURCE_ARTIFACT}" >"$(results.SOURCE_ARTIFACT.path)"
-        echo -n "" >"$(results.CACHI2_ARTIFACT.path)"
+        echo -n "" >"$(results.PREFETCH_ARTIFACT.path)"
       computeResources:
         limits:
           memory: 64Mi
@@ -269,7 +269,7 @@ spec:
         - --store
         - $(params.ociStorage)
         - $(results.SOURCE_ARTIFACT.path)=/var/workdir/source
-        - $(results.CACHI2_ARTIFACT.path)=/var/workdir/cachi2
+        - $(results.PREFETCH_ARTIFACT.path)=/var/workdir/cachi2
       volumeMounts:
         - mountPath: /etc/pki/tls/certs/ca-custom-bundle.crt
           name: trusted-ca
