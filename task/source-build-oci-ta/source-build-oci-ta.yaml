@@ -197,7 +197,7 @@ spec:
           value: /var/workdir/source
         - name: RESULT_FILE
           value: $(results.BUILD_RESULT.path)
-        - name: CACHI2_ARTIFACTS_DIR
+        - name: PREFETCH_ARTIFACTS_DIR
           value: /var/workdir/cachi2
         - name: RESULT_SOURCE_IMAGE_URL
           value: $(results.SOURCE_IMAGE_URL.path)
@@ -243,7 +243,7 @@ spec:
           --source-dir "$SOURCE_DIR"
           --base-images "$base_images"
           --write-result-to "$RESULT_FILE"
-          --prefetch-artifacts-dir "$CACHI2_ARTIFACTS_DIR"
+          --prefetch-artifacts-dir "$PREFETCH_ARTIFACTS_DIR"
           --registry-allowlist="$registry_allowlist"
         )
         if [ "$IGNORE_UNSIGNED_IMAGE" == "true" ]; then
