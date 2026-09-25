@@ -413,7 +413,7 @@ spec:
       args:
         - use
         - $(params.SOURCE_ARTIFACT)=/var/workdir/source
-        - $(params.PREFETCH_ARTIFACT)=/var/workdir/cachi2
+        - $(params.PREFETCH_ARTIFACT)=/var/workdir/prefetch
       volumeMounts:
         - mountPath: /etc/pki/tls/certs/ca-custom-bundle.crt
           name: trusted-ca
@@ -546,8 +546,8 @@ spec:
           security_args+=(--cap-add "${ADD_CAPABILITIES}")
         fi
 
-        if [ -f "/var/workdir/cachi2/cachi2.env" ]; then
-          prefetch_dir="/var/workdir/cachi2"
+        if [ -f "/var/workdir/prefetch/cachi2.env" ]; then
+          prefetch_dir="/var/workdir/prefetch"
           # KBC defaults to ${prefetch_dir}/copy-*
           # Copy to a sibling dir instead in case we don't have write permissions to the prefetch_dir.
           # It's still on the same filesystem, so copying via reflinks should be possible.
