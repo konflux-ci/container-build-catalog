@@ -86,7 +86,7 @@ spec:
         - name: KBC_PD_SOURCE_DIR
           value: $(workspaces.source.path)/source
         - name: KBC_PD_OUTPUT_DIR
-          value: $(workspaces.source.path)/cachi2/output
+          value: $(workspaces.source.path)/prefetch/output
         - name: KBC_PD_SBOM_FORMAT
           value: $(params.sbom-type)
         - name: KBC_PD_MODE
@@ -95,9 +95,9 @@ spec:
           value: /cachi2/output
         - name: KBC_PD_ENV_FILES
           value: >-
-            $(workspaces.source.path)/cachi2/cachi2.env
-            $(workspaces.source.path)/cachi2/prefetch.env
-            $(workspaces.source.path)/cachi2/prefetch-env.json
+            $(workspaces.source.path)/prefetch/cachi2.env
+            $(workspaces.source.path)/prefetch/prefetch.env
+            $(workspaces.source.path)/prefetch/prefetch-env.json
         - name: KBC_PD_GIT_AUTH_DIRECTORY
           value: $(workspaces.git-basic-auth.path)
         - name: WORKSPACE_NETRC_PATH

@@ -453,8 +453,8 @@ spec:
         security_args+=(--cap-add "${ADD_CAPABILITIES}")
       fi
 
-      if [ -f "$(workspaces.source.path)/cachi2/cachi2.env" ]; then
-        prefetch_dir="$(workspaces.source.path)/cachi2"
+      if [ -f "$(workspaces.source.path)/prefetch/cachi2.env" ]; then
+        prefetch_dir="$(workspaces.source.path)/prefetch"
         # KBC defaults to ${prefetch_dir}/copy-*
         # Copy to a sibling dir instead in case we don't have write permissions to the prefetch_dir.
         # It's still on the same filesystem, so copying via reflinks should be possible.
