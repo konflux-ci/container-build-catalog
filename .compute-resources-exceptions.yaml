@@ -1,0 +1,12 @@
+# Exceptions task files that currently fail computeResources checks.
+# Remove an entry when the Task is fixed (prefer the same PR if you want to fix it).
+# Generated for KONFLUX-12895 / KONFLUX-11510.
+exceptions:
+- task/buildah-oci-ta-min/buildah-oci-ta-min.yaml
+- task/buildah-oci-ta/buildah-oci-ta.yaml
+- task/buildah-remote-oci-ta/buildah-remote-oci-ta.yaml
+- task/prefetch-dependencies-oci-ta-min/prefetch-dependencies-oci-ta-min.yaml
+- task/prefetch-dependencies-oci-ta/prefetch-dependencies-oci-ta.yaml
+- task/push-dockerfile-oci-ta/push-dockerfile-oci-ta.yaml
+- task/source-build-oci-ta/source-build-oci-ta.yaml
+- task/tkn-bundle-oci-ta/tkn-bundle-oci-ta.yaml
