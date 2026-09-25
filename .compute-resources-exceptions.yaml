@@ -1,5 +1,5 @@
-# Grandfathered task files that currently fail computeResources checks.
-# Remove an entry when the Task is fixed (prefer the same PR).
+# Exceptions task files that currently fail computeResources checks.
+# Remove an entry when the Task is fixed (prefer the same PR if you want to fix it).
 # Generated for KONFLUX-12895 / KONFLUX-11510.
 exceptions:
 - task/buildah-oci-ta-min/buildah-oci-ta-min.yaml
