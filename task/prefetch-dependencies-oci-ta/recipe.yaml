@@ -4,6 +4,7 @@ add:
   - use-source
   - create-source
   - create-prefetch
+newPrefetchNaming: true
 additionalSteps:
   - at: 0
     name: skip-ta
