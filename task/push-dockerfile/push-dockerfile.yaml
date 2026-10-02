@@ -58,7 +58,7 @@ spec:
       readOnly: true
   steps:
   - name: push
-    image: quay.io/konflux-ci/konflux-build-cli@sha256:85141954209ee158fe9e559869a0da196ff08c5d4bb15b1a6c2e54d4fcd6b52f
+    image: quay.io/konflux-ci/konflux-build-cli@sha256:42809082a271a037f0774af81e536d9f7d03cf0236634ff44b1c5f85b7fa2216
     workingDir: $(workspaces.workspace.path)
     env:
     - name: KBC_LOG_LEVEL
