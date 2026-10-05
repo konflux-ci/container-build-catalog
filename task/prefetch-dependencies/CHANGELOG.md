@@ -11,6 +11,14 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.11.0
+
+### Changed
+
+- Workspace prefetch directory `$(workspaces.source.path)/cachi2` is now `$(workspaces.source.path)/prefetch`.
+
+Requires `buildah` >= 0.13.0 and `source-build` >= 0.4.0
+
 ## 0.10.3
 
 - Hermeto release - <https://github.com/hermetoproject/hermeto/releases/tag/0.62.0>
