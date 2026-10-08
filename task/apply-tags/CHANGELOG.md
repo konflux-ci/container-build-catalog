@@ -11,6 +11,13 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.3.2
+
+### Added
+
+- `ADDITIONAL_TAGS_FROM_LABEL` parameter to specify image label to read additional tags from.
+  For now set previously hardcoded value `konflux.additional-tags` by default to avoid changing the task behavior.
+
 ## 0.3.1
 
 ### Changed

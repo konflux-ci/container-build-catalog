@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   labels:
-    app.kubernetes.io/version: "0.3.1"
+    app.kubernetes.io/version: "0.3.2"
   annotations:
     tekton.dev/pipelines.minVersion: "0.12.1"
     tekton.dev/tags: "konflux"
@@ -21,6 +21,10 @@ spec:
     description: Additional tags that will be applied to the image in the registry.
     type: array
     default: []
+  - name: ADDITIONAL_TAGS_FROM_LABEL
+    type: string
+    description: Image label name to add tags from. Tags are comma or whitespace separated in the label value.
+    default: konflux.additional-tags
   - name: CA_TRUST_CONFIG_MAP_NAME
     type: string
     description: The name of the ConfigMap to read CA bundle data from.
@@ -60,7 +64,7 @@ spec:
         - --tags
         - $(params.ADDITIONAL_TAGS[*])
         - --tags-from-image-label
-        - konflux.additional-tags
+        - $(params.ADDITIONAL_TAGS_FROM_LABEL)
   volumes:
   - name: trusted-ca
     configMap:
