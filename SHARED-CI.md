@@ -118,6 +118,15 @@ task                                    👈 all tasks go here
 Checkton is used to lint shell scripts embedded in YAML files (primarily Tekton files).
 It does so by running ShellCheck. For more details, see the [checkton project](https://github.com/chmeliik/checkton)
 
+### Compute resources
+
+- script: [`hack/check-compute-resources.py`](hack/check-compute-resources.py)
+  - Checks that Task steps and sidecars set compute resources (`computeResources` on Tekton `v1`, `resources` on `v1beta1`).
+- workflow: [`.github/workflows/check-compute-resources.yaml`](.github/workflows/check-compute-resources.yaml)
+  - Runs the check on pull requests and merge groups.
+
+Run with `uv run hack/check-compute-resources.py` [catalog-root]. Optional per-step allowlist: [`.compute-resources-exceptions.yaml`](.compute-resources-exceptions.yaml).
+
 ### Task migration
 
 - script: [`hack/create-task-migration.sh`](hack/create-task-migration.sh)

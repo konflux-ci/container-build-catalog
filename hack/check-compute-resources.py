@@ -1,18 +1,14 @@
-#!/bin/env python3
-"""Enforce per-step computeResources rules on Tekton Task YAML files.
-
-Rule (repo-aligned):
-  - memory request and limit are required and must be equal
-  - CPU request is required
-  - CPU limit is optional; if set, must equal the CPU request
-
-Scans task/${name}/**/${name}.yaml (skips archived-tasks/).
-Honors .compute-resources-exceptions.yaml (one path per line).
-"""
-
-from __future__ import annotations
+#!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "pyyaml",
+# ]
+# ///
+"""Check Task steps/sidecars for computeResources (v1) or resources (v1beta1)."""
 
 import argparse
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,13 +16,11 @@ from typing import Any, Iterator
 
 try:
     import yaml
-except ImportError:  # pragma: no cover
-    print("PyYAML is required: pip install pyyaml", file=sys.stderr)
+except ImportError:
+    print("PyYAML is required. Run: uv run hack/check-compute-resources.py", file=sys.stderr)
     sys.exit(2)
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_EXCEPTIONS = REPO_ROOT / ".compute-resources-exceptions.yaml"
-TASK_ROOT = REPO_ROOT / "task"
+EXCEPTIONS_NAME = ".compute-resources-exceptions.yaml"
 
 
 @dataclass(frozen=True)
@@ -35,10 +29,22 @@ class Finding:
     message: str
 
 
-def is_task_file(path: Path) -> bool:
-    """Return True when the path matches task/{name}/**/{name}.yaml."""
+def catalog_root(explicit: Path | None) -> Path:
+    if explicit is not None:
+        return explicit.expanduser().resolve()
+    try:
+        out = subprocess.check_output(
+            ["git", "rev-parse", "--show-toplevel"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+        return Path(out.strip())
+    except (OSError, subprocess.CalledProcessError):
+        return Path(__file__).resolve().parent.parent
 
-    rel = path.relative_to(REPO_ROOT)
+
+def is_task_file(path: Path, root: Path) -> bool:
+    rel = path.relative_to(root)
     match rel.parts:
         case ["task", task_dir, *_, task_file] if task_file.endswith(".yaml"):
             return task_file.removesuffix(".yaml") == task_dir
@@ -46,30 +52,50 @@ def is_task_file(path: Path) -> bool:
             return False
 
 
-def iter_task_files() -> Iterator[Path]:
-    if not TASK_ROOT.is_dir():
+def iter_task_files(root: Path) -> Iterator[Path]:
+    task_root = root / "task"
+    if not task_root.is_dir():
         return
-    for path in sorted(TASK_ROOT.rglob("*.yaml")):
-        if is_task_file(path):
+    for path in sorted(task_root.rglob("*.yaml")):
+        if is_task_file(path, root):
             yield path
 
 
-def load_exceptions(path: Path) -> set[str]:
-    """Load exception paths: one path per line. Raise exception only for missing file."""
-    with path.open() as fp:
-        return {
-            line.strip()
-            for line in fp
-            if line.strip() and not line.strip().startswith("#")
+def load_exceptions(path: Path, *, required: bool) -> dict[str, dict[str, set[str]]]:
+    if not path.is_file():
+        if required:
+            raise FileNotFoundError(path)
+        return {}
+
+    data = yaml.safe_load(path.read_text())
+    if data is None:
+        return {}
+    if not isinstance(data, dict) or not isinstance(data.get("exceptions"), list):
+        raise ValueError(f"{path}: expected a mapping with an 'exceptions' list")
+
+    result: dict[str, dict[str, set[str]]] = {}
+    for entry in data["exceptions"]:
+        if not isinstance(entry, dict) or "path" not in entry:
+            raise ValueError(f"{path}: invalid exception entry: {entry!r}")
+        rel = str(entry["path"])
+        steps = entry.get("steps") or []
+        sidecars = entry.get("sidecars") or []
+        if not isinstance(steps, list) or not isinstance(sidecars, list):
+            raise ValueError(f"{path}: steps/sidecars must be lists in {rel}")
+        if not steps and not sidecars:
+            raise ValueError(f"{path}: {rel} must list steps and/or sidecars")
+        result[rel] = {
+            "steps": {str(name) for name in steps},
+            "sidecars": {str(name) for name in sidecars},
         }
+    return result
+
+
+def resource_field(api_version: Any) -> str:
+    return "resources" if str(api_version).endswith("/v1beta1") else "computeResources"
 
 
 def compute_resources(obj: dict[str, Any]) -> dict[str, Any] | None:
-    """Return the resources block from a step, sidecar, or stepTemplate.
-
-    Tekton v1 uses `computeResources`; Tekton v1beta1 uses `resources`.
-    https://tekton.dev/docs/pipelines/tasks/#defining-steps
-    """
     if "computeResources" in obj:
         return obj.get("computeResources") or {}
     if "resources" in obj:
@@ -81,10 +107,6 @@ def merge_compute_resources(
     base: dict[str, Any] | None,
     overlay: dict[str, Any] | None,
 ) -> dict[str, Any] | None:
-    """Apply stepTemplate defaults, then per-step overrides.
-
-    https://tekton.dev/docs/pipelines/tasks/#specifying-step-template
-    """
     if overlay is None:
         return base
     if base is None:
@@ -100,13 +122,20 @@ def check_resources(
     kind: str,
     step: dict[str, Any],
     cr: dict[str, Any] | None,
+    field: str,
+    api_version: str,
 ) -> list[Finding]:
     name = step.get("name") or f"<{kind}>"
     findings: list[Finding] = []
 
     if cr is None:
+        other = "resources" if field == "computeResources" else "computeResources"
         findings.append(
-            Finding(path, f"{kind} '{name}': missing computeResources (or resources)")
+            Finding(
+                path,
+                f"{kind} '{name}': missing {field} "
+                f"({api_version} requires {field}, not {other})",
+            )
         )
         return findings
 
@@ -142,43 +171,70 @@ def check_resources(
     return findings
 
 
-def check_task_file(path: Path) -> list[Finding]:
-    rel = path.relative_to(REPO_ROOT)
+def check_task_file(path: Path, rel: Path) -> dict[tuple[str, str], list[Finding]]:
     data = yaml.safe_load(path.read_text())
     if not isinstance(data, dict):
         raise ValueError(f"{rel}: expected a mapping at document root")
 
+    api_version = str(data.get("apiVersion") or "tekton.dev/v1")
+    field = resource_field(api_version)
     spec = data.get("spec") or {}
     template = spec.get("stepTemplate") or {}
     template_cr = compute_resources(template) if isinstance(template, dict) else None
 
-    findings: list[Finding] = []
+    items: dict[tuple[str, str], list[Finding]] = {}
     for kind in ("steps", "sidecars"):
         for step in spec.get(kind) or []:
             if not isinstance(step, dict):
                 continue
-            # stepTemplate applies to steps only, not sidecars.
+            name = str(step.get("name") or f"<{kind}>")
             cr = compute_resources(step)
             if kind == "steps":
                 cr = merge_compute_resources(template_cr, cr)
-            findings.extend(check_resources(rel, kind, step, cr))
-    return findings
+            items.setdefault((kind, name), []).extend(
+                check_resources(rel, kind, step, cr, field, api_version)
+            )
+    return items
 
 
-def collect_findings(exceptions: set[str]) -> list[Finding]:
+def collect_findings(
+    root: Path, exceptions: dict[str, dict[str, set[str]]]
+) -> list[Finding]:
     findings: list[Finding] = []
-    for path in iter_task_files():
-        rel = str(path.relative_to(REPO_ROOT))
-        file_findings = check_task_file(path)
-        if file_findings:
-            if rel in exceptions:
+    seen: set[str] = set()
+    for path in iter_task_files(root):
+        rel = path.relative_to(root)
+        rel_s = rel.as_posix()
+        seen.add(rel_s)
+        items = check_task_file(path, rel)
+        allow = exceptions.get(rel_s, {"steps": set(), "sidecars": set()})
+        violated = {key for key, item_findings in items.items() if item_findings}
+        for (kind, name), item_findings in items.items():
+            if name in allow.get(kind, set()):
                 continue
-            findings.extend(file_findings)
-        elif rel in exceptions:
+            findings.extend(item_findings)
+        for kind in ("steps", "sidecars"):
+            for name in sorted(allow.get(kind, set())):
+                if (kind, name) not in items:
+                    findings.append(
+                        Finding(
+                            rel,
+                            f"{kind} '{name}': listed in exceptions file but does not exist; remove it",
+                        )
+                    )
+                elif (kind, name) not in violated:
+                    findings.append(
+                        Finding(
+                            rel,
+                            f"{kind} '{name}': listed in exceptions file but is now compliant; remove it",
+                        )
+                    )
+    for rel_s in exceptions:
+        if rel_s not in seen:
             findings.append(
                 Finding(
-                    path.relative_to(REPO_ROOT),
-                    "listed in exceptions file but is now compliant; remove it",
+                    Path(rel_s),
+                    "listed in exceptions file but is not a scanned task file; remove it",
                 )
             )
     return findings
@@ -200,13 +256,22 @@ def emit(findings: list[Finding]) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
+        "root",
+        nargs="?",
+        type=Path,
+        help="Catalog root (default: git toplevel, else this script's repository)",
+    )
+    parser.add_argument(
         "--exceptions",
         type=Path,
-        default=DEFAULT_EXCEPTIONS,
-        help="Path to exceptions file (default: .compute-resources-exceptions.yaml)",
+        default=None,
+        help=f"Exceptions YAML (default: {EXCEPTIONS_NAME} under the catalog root, if present)",
     )
     args = parser.parse_args(argv)
-    return emit(collect_findings(load_exceptions(args.exceptions)))
+    root = catalog_root(args.root)
+    required = args.exceptions is not None
+    exceptions_path = args.exceptions if required else root / EXCEPTIONS_NAME
+    return emit(collect_findings(root, load_exceptions(exceptions_path, required=required)))
 
 
 if __name__ == "__main__":
