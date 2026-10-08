@@ -8,6 +8,7 @@ Applies additional tags to the built image.
 |IMAGE_URL|Image repository and tag reference of the the built image.||true|
 |IMAGE_DIGEST|Image digest of the built image.||true|
 |ADDITIONAL_TAGS|Additional tags that will be applied to the image in the registry.|[]|false|
+|ADDITIONAL_TAGS_FROM_LABEL|Image label name to add tags from. Tags are comma or whitespace separated in the label value.|konflux.additional-tags|false|
 |CA_TRUST_CONFIG_MAP_NAME|The name of the ConfigMap to read CA bundle data from.|trusted-ca|false|
 |CA_TRUST_CONFIG_MAP_KEY|The name of the key in the ConfigMap that contains the CA bundle data.|ca-bundle.crt|false|
 |LOG_LEVEL|Log level to use in the task. See golang logrus docs for available levels.|info|false|
