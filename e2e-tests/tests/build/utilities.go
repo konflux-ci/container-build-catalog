@@ -14,12 +14,14 @@ import (
 	remoteimg "github.com/google/go-containerregistry/pkg/v1/remote"
 	appservice "github.com/konflux-ci/application-api/api/v1alpha1"
 	"github.com/konflux-ci/e2e-tests/pkg/clients/common"
+	integrationClient "github.com/konflux-ci/e2e-tests/pkg/clients/integration"
 	"github.com/konflux-ci/e2e-tests/pkg/clients/oras"
 	"github.com/konflux-ci/e2e-tests/pkg/constants"
 	"github.com/konflux-ci/e2e-tests/pkg/framework"
 	"github.com/konflux-ci/e2e-tests/pkg/utils"
 	"github.com/konflux-ci/e2e-tests/pkg/utils/build"
 	"github.com/konflux-ci/e2e-tests/pkg/utils/tekton"
+	integrationApi "github.com/konflux-ci/integration-service/api/v1beta2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/openshift/library-go/pkg/image/reference"
@@ -428,4 +430,66 @@ func EnsureOriginalDockerfileIsPushed(hub *framework.ControllerHub, pr *tektonpi
 		}
 	}
 	Fail(fmt.Sprintf("Dockerfile is not found from the pulled artifacts for %s", dockerfileImage))
+}
+
+func CreateIntegrationTestScenario(i *integrationClient.IntegrationController, itsName, applicationName, namespace, gitURL, revision, pathInRepo, kind string, contexts []string, policyConfig string) (*integrationApi.IntegrationTestScenario, error) {
+	if itsName == "" {
+		itsName = "my-integration-test-" + util.GenerateRandomString(4)
+	}
+
+	params := []integrationApi.ResolverParameter{
+		{
+			Name:  "url",
+			Value: gitURL,
+		},
+		{
+			Name:  "revision",
+			Value: revision,
+		},
+		{
+			Name:  "pathInRepo",
+			Value: pathInRepo,
+		},
+	}
+
+	integrationTestScenario := &integrationApi.IntegrationTestScenario{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      itsName,
+			Namespace: namespace,
+			Labels:    constants.IntegrationTestScenarioDefaultLabels,
+		},
+		Spec: integrationApi.IntegrationTestScenarioSpec{
+			Application: applicationName,
+			ResolverRef: integrationApi.ResolverRef{
+				Resolver: "git",
+				Params:   params,
+			},
+			Params: []integrationApi.PipelineParameter{
+				{
+					Name:  "POLICY_CONFIGURATION",
+					Value: policyConfig,
+				},
+			},
+			Contexts: []integrationApi.TestContext{},
+		},
+	}
+
+	// Add kind parameter if provided and is "pipelineRun"
+	if strings.EqualFold(kind, "pipelineRun") {
+		integrationTestScenario.Spec.ResolverRef.ResourceKind = "pipelinerun"
+
+	}
+
+	if len(contexts) > 0 {
+		for _, testContext := range contexts {
+			integrationTestScenario.Spec.Contexts = append(integrationTestScenario.Spec.Contexts,
+				integrationApi.TestContext{Name: testContext, Description: testContext})
+		}
+	}
+
+	err := i.KubeRest().Create(context.Background(), integrationTestScenario)
+	if err != nil {
+		return nil, err
+	}
+	return integrationTestScenario, nil
 }
