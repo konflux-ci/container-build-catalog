@@ -1,0 +1,19 @@
+name: Check compute resources
+'on':
+  pull_request:
+    branches: [main]
+  merge_group:
+    types: [checks_requested]
+jobs:
+  check-compute-resources:
+    name: Check compute resources
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Check compute resources
+        run: python3 hack/check-compute-resources.py
