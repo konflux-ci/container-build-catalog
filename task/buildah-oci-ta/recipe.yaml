@@ -5,6 +5,7 @@ removeParams:
 add:
   - use-source
   - use-prefetch
+newPrefetchNaming: true
 removeWorkspaces:
   - source
 useTAVolumeMount: true

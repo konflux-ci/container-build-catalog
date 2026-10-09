@@ -3,6 +3,7 @@ base: ../source-build/source-build.yaml
 add:
   - use-source
   - use-prefetch
+newPrefetchNaming: true
 removeWorkspaces:
   - workspace
 removeVolumes:

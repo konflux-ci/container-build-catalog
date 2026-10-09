@@ -11,6 +11,16 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.11.0
+
+### Changed
+
+- Renamed Trusted Artifact result `CACHI2_ARTIFACT` to `PREFETCH_ARTIFACT`.
+- Trusted Artifact path `/var/workdir/cachi2` is now `/var/workdir/prefetch`.
+- A migration rewrites `$(tasks.*.results.CACHI2_ARTIFACT)` references in consumer pipelines.
+
+Requires `buildah-oci-ta` >= 0.13.0 and `source-build-oci-ta` >= 0.4.0
+
 ## 0.10.3
 
 - Hermeto release - <https://github.com/hermetoproject/hermeto/releases/tag/0.62.0>

@@ -4,7 +4,7 @@ kind: Task
 metadata:
   name: source-build
   labels:
-    app.kubernetes.io/version: "0.3.2"
+    app.kubernetes.io/version: "0.4.0"
   annotations:
     tekton.dev/pipelines.minVersion: "0.12.1"
     tekton.dev/tags: "konflux"
@@ -199,8 +199,8 @@ spec:
           value: "$(workspaces.workspace.path)/source"
         - name: RESULT_FILE
           value: "$(results.BUILD_RESULT.path)"
-        - name: CACHI2_ARTIFACTS_DIR
-          value: "$(workspaces.workspace.path)/cachi2"
+        - name: PREFETCH_ARTIFACTS_DIR
+          value: "$(workspaces.workspace.path)/prefetch"
         - name: RESULT_SOURCE_IMAGE_URL
           value: "$(results.SOURCE_IMAGE_URL.path)"
         - name: RESULT_SOURCE_IMAGE_DIGEST
@@ -245,7 +245,7 @@ spec:
           --source-dir "$SOURCE_DIR"
           --base-images "$base_images"
           --write-result-to "$RESULT_FILE"
-          --prefetch-artifacts-dir "$CACHI2_ARTIFACTS_DIR"
+          --prefetch-artifacts-dir "$PREFETCH_ARTIFACTS_DIR"
           --registry-allowlist="$registry_allowlist"
         )
         if [ "$IGNORE_UNSIGNED_IMAGE" == "true" ]; then

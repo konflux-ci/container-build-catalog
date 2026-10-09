@@ -11,6 +11,15 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.4.0
+
+### Changed
+
+- Renamed step env var `CACHI2_ARTIFACTS_DIR` to `PREFETCH_ARTIFACTS_DIR`.
+- Prefetch artifacts directory `$(workspaces.workspace.path)/cachi2` is now `$(workspaces.workspace.path)/prefetch`.
+
+Requires `prefetch-dependencies` >= 0.11.0
+
 ## 0.3.2
 
 ### Fixed

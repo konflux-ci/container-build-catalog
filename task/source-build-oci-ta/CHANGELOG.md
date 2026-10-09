@@ -11,6 +11,17 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.4.0
+
+### Changed
+
+- Renamed step env var `CACHI2_ARTIFACTS_DIR` to `PREFETCH_ARTIFACTS_DIR`.
+- Renamed Trusted Artifact parameter `CACHI2_ARTIFACT` to `PREFETCH_ARTIFACT`.
+- Trusted Artifact path `/var/workdir/cachi2` is now `/var/workdir/prefetch`.
+- A migration renames the `CACHI2_ARTIFACT` task param to `PREFETCH_ARTIFACT` in consumer pipelines.
+
+Requires `prefetch-dependencies-oci-ta` >= 0.11.0
+
 ## 0.3.2
 
 ### Fixed

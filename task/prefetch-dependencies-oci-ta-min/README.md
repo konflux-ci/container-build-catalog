@@ -24,7 +24,7 @@ Task that prefetches project dependencies for hermetic build.
 ## Results
 |name|description|
 |---|---|
-|CACHI2_ARTIFACT|The Trusted Artifact URI pointing to the artifact with the prefetched dependencies.|
+|PREFETCH_ARTIFACT|The Trusted Artifact URI pointing to the artifact with the prefetched dependencies.|
 |SOURCE_ARTIFACT|The Trusted Artifact URI pointing to the artifact with the application source code.|
 
 ## Workspaces
@@ -41,7 +41,7 @@ Compared to the other OCI-TA tasks in this repository, this task adds a `skip-ta
 when `input` is empty (nothing to prefetch):
 
 - Passes through `SOURCE_ARTIFACT` from the task parameter (the git-clone task result)
-- Sets `CACHI2_ARTIFACT` to an empty string
+- Sets `PREFETCH_ARTIFACT` to an empty string
 
 In that case, all other steps are skipped.
 

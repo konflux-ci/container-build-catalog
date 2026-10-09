@@ -18,4 +18,8 @@ yq -i '
 # ExceededNodeResources). Drop requests/limits on the temp Task copy only.
 yq -i 'del(.spec.steps[].computeResources)' "$TASK_COPY"
 
+# Kind nodes typically deny user namespaces. The run-script step uses
+# `unshare` + buildah, which needs privileged in this CI only.
+yq -i '(.spec.steps[] | select(.name == "run-script")).securityContext.privileged = true' "$TASK_COPY"
+
 echo "Pre-requirements setup complete"

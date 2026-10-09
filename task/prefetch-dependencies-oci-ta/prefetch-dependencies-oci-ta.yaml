@@ -7,7 +7,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: image-build, konflux
   labels:
-    app.kubernetes.io/version: 0.10.3
+    app.kubernetes.io/version: 0.11.0
 spec:
   description: Task that prefetches project dependencies for hermetic build.
   params:
@@ -79,7 +79,7 @@ spec:
         cyclonedx.'
       default: spdx
   results:
-    - name: CACHI2_ARTIFACT
+    - name: PREFETCH_ARTIFACT
       description: The Trusted Artifact URI pointing to the artifact with
         the prefetched dependencies.
       type: string
@@ -138,7 +138,7 @@ spec:
         #!/bin/bash
 
         echo -n "${SOURCE_ARTIFACT}" >"$(results.SOURCE_ARTIFACT.path)"
-        echo -n "" >"$(results.CACHI2_ARTIFACT.path)"
+        echo -n "" >"$(results.PREFETCH_ARTIFACT.path)"
       computeResources:
         limits:
           memory: 64Mi
@@ -186,7 +186,7 @@ spec:
         - name: KBC_PD_SOURCE_DIR
           value: /var/workdir/source
         - name: KBC_PD_OUTPUT_DIR
-          value: /var/workdir/cachi2/output
+          value: /var/workdir/prefetch/output
         - name: KBC_PD_SBOM_FORMAT
           value: $(params.sbom-type)
         - name: KBC_PD_MODE
@@ -194,8 +194,8 @@ spec:
         - name: KBC_PD_OUTPUT_DIR_MOUNT_POINT
           value: /cachi2/output
         - name: KBC_PD_ENV_FILES
-          value: /var/workdir/cachi2/cachi2.env /var/workdir/cachi2/prefetch.env
-            /var/workdir/cachi2/prefetch-env.json
+          value: /var/workdir/prefetch/cachi2.env /var/workdir/prefetch/prefetch.env
+            /var/workdir/prefetch/prefetch-env.json
         - name: KBC_PD_GIT_AUTH_DIRECTORY
           value: $(workspaces.git-basic-auth.path)
         - name: WORKSPACE_NETRC_PATH
@@ -269,7 +269,7 @@ spec:
         - --store
         - $(params.ociStorage)
         - $(results.SOURCE_ARTIFACT.path)=/var/workdir/source
-        - $(results.CACHI2_ARTIFACT.path)=/var/workdir/cachi2
+        - $(results.PREFETCH_ARTIFACT.path)=/var/workdir/prefetch
       volumeMounts:
         - mountPath: /etc/pki/tls/certs/ca-custom-bundle.crt
           name: trusted-ca

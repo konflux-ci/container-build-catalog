@@ -11,6 +11,14 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.13.0
+
+### Changed
+
+- Prefetch workspace directory `$(workspaces.source.path)/cachi2` is now `$(workspaces.source.path)/prefetch`.
+
+Requires `prefetch-dependencies` >= 0.11.0
+
 ## 0.12.3
 
 *Version 0.12.3 only has relevant changes for the remote variants of this task.*
