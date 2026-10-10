@@ -357,7 +357,7 @@ spec:
     - name: YUM_REPOS_D_TARGET
       value: $(params.YUM_REPOS_D_TARGET)
     - name: BUILDER_IMAGE
-      value: quay.io/konflux-ci/konflux-build-cli@sha256:42809082a271a037f0774af81e536d9f7d03cf0236634ff44b1c5f85b7fa2216
+      value: quay.io/konflux-ci/konflux-build-cli@sha256:c01fbf715423c40f99fb62300ad4874ff858711cb887f9edeb10e889d9e29031
     - name: PLATFORM
       value: $(params.PLATFORM)
     - name: IMAGE_APPEND_PLATFORM
@@ -420,7 +420,7 @@ spec:
       value: $(params.SOURCE_DATE_EPOCH)
     - name: BUILDAH_REWRITE_TIMESTAMP
       value: $(params.REWRITE_TIMESTAMP)
-    image: quay.io/konflux-ci/konflux-build-cli@sha256:42809082a271a037f0774af81e536d9f7d03cf0236634ff44b1c5f85b7fa2216
+    image: quay.io/konflux-ci/konflux-build-cli@sha256:c01fbf715423c40f99fb62300ad4874ff858711cb887f9edeb10e889d9e29031
     name: build
     script: |-
       #!/bin/bash
