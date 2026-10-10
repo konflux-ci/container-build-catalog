@@ -418,7 +418,7 @@ spec:
           readOnly: true
           subPath: ca-bundle.crt
     - name: build
-      image: quay.io/konflux-ci/konflux-build-cli@sha256:42809082a271a037f0774af81e536d9f7d03cf0236634ff44b1c5f85b7fa2216
+      image: quay.io/konflux-ci/konflux-build-cli@sha256:c01fbf715423c40f99fb62300ad4874ff858711cb887f9edeb10e889d9e29031
       args:
         - --build-args
         - $(params.BUILD_ARGS[*])
