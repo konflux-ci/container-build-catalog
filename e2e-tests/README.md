@@ -2,6 +2,14 @@
 
 This document explains the test scenarios defined in `tests/build/scenarios.go` and how scenarios are grouped and their selection logic.
 
+## Task and Pipeline Bundle Modes
+
+- **Task mode** tests changed task bundles by injecting them into released pipeline bundles.
+- **Pipeline mode** tests changed pipeline bundles from the Snapshot as-is; unchanged pipeline flavors use their default `:devel` bundles.
+- If a change includes both tasks and pipelines, run two independent integration tests (ITs): task mode with the changed task injected into released pipelines, and pipeline mode with the new pipeline bundle as-is.
+
+See the [pipeline bundle management design](../docs/design/pipeline-bundle-management.md) for the rationale and details.
+
 ## Scenario Groups
 
 Scenarios are organized into the following groups:

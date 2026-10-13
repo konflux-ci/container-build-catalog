@@ -55,9 +55,9 @@ spec:
         resolver: git
         params:
           - name: url
-            value: https://github.com/konflux-ci/container-build-catalog.git
+            value: $(tasks.prepare-e2e.results.git-url)
           - name: revision
-            value: main
+            value: $(tasks.prepare-e2e.results.git-revision)
           - name: pathInRepo
             value: e2e-tests/tasks/create-test-pipeline-bundle.yaml
       params:
@@ -67,6 +67,8 @@ spec:
           value:  $(tasks.prepare-e2e.results.snapshot-type)
         - name: component-names
           value: $(tasks.prepare-e2e.results.component-names)
+        - name: e2e-bundle-mode
+          value: $(tasks.prepare-e2e.results.e2e-bundle-mode)
         - name: git-url
           value: $(tasks.prepare-e2e.results.git-url)
         - name: git-revision

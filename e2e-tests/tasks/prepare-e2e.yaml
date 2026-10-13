@@ -45,6 +45,8 @@ spec:
       description: comma seperated name of the components for which pipelinerun is triggered
     - name: scenario-group
       description: The group of e2e scenarios to run based on the changed tasks.
+    - name: e2e-bundle-mode
+      description: The e2e bundle mode, either `task` or `pipeline`.
   params:
     - name: SNAPSHOT
       description: The JSON string of the Snapshot under test.
@@ -112,14 +114,16 @@ spec:
           exit 1
         fi
 
-        get_changed_tasks() {
+        # List every path changed in the PR (one GitHub pagination pass). Used by
+        # load_pr_catalog_changes to derive both task/ and pipelines/ catalog dirs.
+        fetch_pr_changed_files() {
           local git_org="$1"
           local git_repo="$2"
           local pull_request_number="$3"
-          # Validate parameters
-          if [[ -z "$GIT_ORGANIZATION" || -z "$GIT_REPOSITORY" || -z "$PULL_REQUEST_NUMBER" ]]; then
+
+          if [[ -z "$git_org" || -z "$git_repo" || -z "$pull_request_number" ]]; then
             echo "Error: Missing required parameters" >&2
-            echo "Usage: get_changed_tasks <organization> <repository> <pr_number>" >&2
+            echo "Usage: fetch_pr_changed_files <organization> <repository> <pr_number>" >&2
             return 1
           fi
 
@@ -130,13 +134,11 @@ spec:
               echo "Error: Failed to fetch PR files ( page ${page})" >&2
               return 1
             fi
-            # Validate JSON and get count
             if ! count=$(echo "$response" | jq -e 'if type == "array" then length else 0 end'); then
               echo "Error: Invalid JSON response from GitHub API" >&2
               echo "Got Response: $response" >&2
               return 1
             fi
-            # Break on empty page
             if [[ "$count" -eq 0 ]]; then
               break
             fi
@@ -151,21 +153,46 @@ spec:
           done
 
           if [[ -z "${changed_files// }" ]]; then
-            echo "[ERROR] No changed files found for PR #${PULL_REQUEST_NUMBER}. Check that the PR number is valid." >&2
+            echo "[ERROR] No changed files found for PR #${pull_request_number}. Check that the PR number is valid." >&2
             return 1
           fi
 
-          # Extract unique task directory names (task/<name>/...)
-          local changed_tasks
-          changed_tasks=$(echo "$changed_files" | grep '^task/' | awk -F'/' '{print $2}' | sort -u)
+          printf '%s' "$changed_files"
+          return 0
+        }
 
-          if [[ -z "$changed_tasks" ]]; then
-            echo "No task directories were changed in PR #${PULL_REQUEST_NUMBER}" >&2
+        # Extract unique catalog component dir names (e.g. task/<name>/... or pipelines/<name>/...).
+        extract_changed_catalog_dirs() {
+          local changed_files="$1"
+          local top_level_dir="$2"
+          local kind_label="$3"
+          local pull_request_number="$4"
+
+          local dirs
+          dirs=$(echo "$changed_files" | grep "^${top_level_dir}/" | awk -F'/' '{print $2}' | sort -u) || true
+
+          if [[ -z "$dirs" ]]; then
+            echo "No ${kind_label} directories were changed in PR #${pull_request_number}" >&2
             return 0
           fi
 
-          # Return changed tasks via stdout
-          echo "$changed_tasks"
+          echo "$dirs"
+          return 0
+        }
+
+        # Sets changed_tasks and changed_pipelines from one PR files fetch.
+        load_pr_catalog_changes() {
+          local git_org="$1"
+          local git_repo="$2"
+          local pull_request_number="$3"
+          local pr_files
+
+          if ! pr_files=$(fetch_pr_changed_files "$git_org" "$git_repo" "$pull_request_number"); then
+            return 1
+          fi
+
+          changed_tasks=$(extract_changed_catalog_dirs "$pr_files" "task" "task" "$pull_request_number")
+          changed_pipelines=$(extract_changed_catalog_dirs "$pr_files" "pipelines" "pipeline" "$pull_request_number")
           return 0
         }
 
@@ -207,13 +234,19 @@ spec:
           echo "  SOURCE_REPO_URL: $SOURCE_REPO_URL"
           echo "  SOURCE_REPO_BRANCH: $SOURCE_REPO_BRANCH"
           echo "  TARGET_REPO_BRANCH: $TARGET_REPO_BRANCH"
-          if ! changed_tasks=$(get_changed_tasks "${GIT_ORGANIZATION}" "${GIT_REPOSITORY}" "${PULL_REQUEST_NUMBER}"); then
-            echo "[ERROR] failed to get changed tasks, exiting..."
+          if ! load_pr_catalog_changes "${GIT_ORGANIZATION}" "${GIT_REPOSITORY}" "${PULL_REQUEST_NUMBER}"; then
+            echo "[ERROR] failed to get changed tasks/pipelines from PR, exiting..."
             exit 1
           fi
-          command_seperated_component_names=$(echo "${changed_tasks}" | sed 's/^/task-/' | paste -sd ',' -)
-          echo "CHANGED COMPONENT NAMES: ${command_seperated_component_names}"
-          echo -n "${command_seperated_component_names}" > "$(results.component-names.path)"
+          changed_tasks_names=$(printf '%s\n' "${changed_tasks}" | sed '/^$/d; s/^/task-/' | paste -sd ',' -)
+          changed_pipelines_names=$(printf '%s\n' "${changed_pipelines}" | sed '/^$/d; s/^/pipeline-/' | paste -sd ',' -)
+          command_separated_component_names="${changed_tasks_names}"
+          if [[ -n "${command_separated_component_names}" && -n "${changed_pipelines_names}" ]]; then
+            command_separated_component_names+=","
+          fi
+          command_separated_component_names+="${changed_pipelines_names}"
+          echo "CHANGED COMPONENT NAMES: ${command_separated_component_names}"
+          echo -n "${command_separated_component_names}" > "$(results.component-names.path)"
         elif [[ "$TEST_TYPE" == "component" ]]; then
   
           if [[ -z "$KONFLUX_COMPONENT_NAME" ]]; then
@@ -236,15 +269,16 @@ spec:
           echo "  SOURCE_REPO_URL: $SOURCE_REPO_URL"
           echo "  SOURCE_REPO_BRANCH: $SOURCE_REPO_BRANCH"
           echo "  TARGET_REPO_BRANCH: $TARGET_REPO_BRANCH"
-          
-          if ! changed_tasks=$(get_changed_tasks "${GIT_ORGANIZATION}" "${GIT_REPOSITORY}" "${PULL_REQUEST_NUMBER}"); then
-            echo "[ERROR] failed to get changed tasks, exiting..."
+
+          if ! load_pr_catalog_changes "${GIT_ORGANIZATION}" "${GIT_REPOSITORY}" "${PULL_REQUEST_NUMBER}"; then
+            echo "[ERROR] failed to get changed tasks/pipelines from PR, exiting..."
             exit 1
           fi
 
           number_of_task_changed="$(echo "$changed_tasks" | wc -l)"
-          if [[ "$number_of_task_changed" -gt 1 ]]; then
-            echo "More than one task changed, no need to continue"
+          number_of_pipeline_changed="$(echo "$changed_pipelines" | wc -l)"
+          if [[ "$number_of_task_changed" -gt 1 ]] || [[ "$number_of_pipeline_changed" -gt 1 ]]; then
+            echo "More than one task or pipeline changed, no need to continue"
             exit 0
           fi
           echo -n "$KONFLUX_COMPONENT_NAME" > "$(results.component-names.path)"
@@ -254,10 +288,43 @@ spec:
           exit 1
         fi
 
-        if [[ -z "$changed_tasks" ]]; then
-            echo "No tasks changed, no need to continue"
-            exit 0
+        has_task_changes=false
+        has_pipeline_changes=false
+        [[ -n "${changed_tasks//[$'\n\r ']}" ]] && has_task_changes=true
+        [[ -n "${changed_pipelines//[$'\n\r ']}" ]] && has_pipeline_changes=true
+
+        if ! $has_task_changes && ! $has_pipeline_changes; then
+          echo "No tasks or pipelines changed, no need to continue"
+          exit 0
         fi
+
+        E2E_BUNDLE_MODE=""
+
+        if [[ "$TEST_TYPE" == "component" ]]; then
+          if [[ "$KONFLUX_COMPONENT_NAME" == pipeline-* ]]; then
+            E2E_BUNDLE_MODE="pipeline"
+          else
+            E2E_BUNDLE_MODE="task"
+          fi
+        elif [[ "$TEST_TYPE" == "group" ]]; then
+          if $has_task_changes && ! $has_pipeline_changes; then
+            E2E_BUNDLE_MODE="task"
+          elif ! $has_task_changes && $has_pipeline_changes; then
+            E2E_BUNDLE_MODE="pipeline"
+          elif $has_task_changes && $has_pipeline_changes; then
+            # Two integrations per design (task inject + pipeline as-is); task app group run uses task mode.
+            E2E_BUNDLE_MODE="task"
+          fi
+        else
+          echo "[ERROR] Unknown TEST_TYPE for e2e-bundle-mode: $TEST_TYPE"
+          exit 1
+        fi
+
+        if [[ -z "$E2E_BUNDLE_MODE" ]]; then
+          echo "[ERROR] could not determine e2e-bundle-mode for TEST_TYPE=${TEST_TYPE}"
+          exit 1
+        fi
+        echo "E2E_BUNDLE_MODE: ${E2E_BUNDLE_MODE}"
 
         # Write each environment variable to its respective result file
         echo -n "$EVENT_TYPE" > "$(results.test-event-type.path)"
@@ -272,7 +339,12 @@ spec:
         echo -n "$TARGET_REPO_BRANCH" > "$(results.target-repo-branch.path)"
         echo -n "true" > "$(results.run-e2e.path)"
         echo -n "$TEST_TYPE" > "$(results.snapshot-type.path)"
+        echo -n "$E2E_BUNDLE_MODE" > "$(results.e2e-bundle-mode.path)"
 
-        scenario_group="$(determine_scenario_group "$changed_tasks")"
+        if [[ -n "$changed_tasks" ]]; then
+            scenario_group="$(determine_scenario_group "$changed_tasks")"
+        elif [[ -n "$changed_pipelines" ]]; then
+            scenario_group="$(determine_scenario_group "$changed_pipelines")"
+        fi
         echo "SCENARIO GROUP: ${scenario_group}"
         echo -n "$scenario_group" > "$(results.scenario-group.path)"
