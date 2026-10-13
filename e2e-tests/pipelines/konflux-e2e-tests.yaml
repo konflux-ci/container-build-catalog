@@ -27,15 +27,23 @@ spec:
       description: "URL to the artifact browser deployment. If provided, a link will be added to PR comments."
       default: ""
       type: string
+    - name: catalog-git-url
+      description: Git URL for catalog Task definitions (git resolver). Match IntegrationTestScenario resolver when testing a fork or branch.
+      default: 'https://github.com/konflux-ci/container-build-catalog.git'
+      type: string
+    - name: catalog-git-revision
+      description: Git revision for catalog-git-url.
+      default: main
+      type: string
   tasks:
     - name: prepare-e2e
       taskRef:
         resolver: git
         params:
           - name: url
-            value: https://github.com/konflux-ci/container-build-catalog.git
+            value: $(params.catalog-git-url)
           - name: revision
-            value: main
+            value: $(params.catalog-git-revision)
           - name: pathInRepo
             value: e2e-tests/tasks/prepare-e2e.yaml
       params:
@@ -55,9 +63,9 @@ spec:
         resolver: git
         params:
           - name: url
-            value: $(tasks.prepare-e2e.results.git-url)
+            value: $(params.catalog-git-url)
           - name: revision
-            value: $(tasks.prepare-e2e.results.git-revision)
+            value: $(params.catalog-git-revision)
           - name: pathInRepo
             value: e2e-tests/tasks/create-test-pipeline-bundle.yaml
       params:
@@ -170,16 +178,16 @@ spec:
         resolver: git
         params:
           - name: url
-            value: https://github.com/konflux-ci/container-build-catalog.git
+            value: $(params.catalog-git-url)
           - name: revision
-            value: main
+            value: $(params.catalog-git-revision)
           - name: pathInRepo
             value: e2e-tests/tasks/container-build-catalog-e2e.yaml
       params:
         - name: git-url
-          value: "https://github.com/konflux-ci/container-build-catalog.git"
+          value: $(tasks.prepare-e2e.results.git-url)
         - name: git-revision
-          value: main
+          value: $(tasks.prepare-e2e.results.git-revision)
         - name: oci-container
           value: $(params.oci-container-repo):$(context.pipelineRun.name)
         - name: cluster-access-secret-name

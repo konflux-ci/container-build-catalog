@@ -10,6 +10,8 @@ This document explains the test scenarios defined in `tests/build/scenarios.go` 
 
 See the [pipeline bundle management design](../docs/design/pipeline-bundle-management.md) for the rationale and details.
 
+When running `konflux-e2e-tests` from a fork or feature branch, set IntegrationTestScenario pipeline parameters `catalog-git-url` and `catalog-git-revision` to the same values as the scenario git resolver (Tekton cannot use `prepare-e2e` results in git task resolvers).
+
 ## Scenario Groups
 
 Scenarios are organized into the following groups:
