@@ -284,7 +284,6 @@ spec:
       env:
         - name: IMAGE_EXPIRES_AFTER
           value: $(params.ociArtifactExpiresAfter)
-      # KONFLUX-14361: fleet MAX ~6.7Gi / ~1.02 cpu (heavy-tail vs p95 ~536Mi)
       computeResources:
         limits:
           memory: 7Gi
