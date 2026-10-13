@@ -9,7 +9,10 @@ When you make changes without bumping the version right away, document them here
 If that's not something you ever plan to do, consider removing this section.
 -->
 
-*Nothing yet.*
+### Changed
+
+- Align min shrink with KONFLUX-14361 oci-ta policy: set `use-trusted-artifact` floors
+  (`64Mi` / `50m`), keep prefetch/create at `256Mi` / `100m`, drop inherited `limits.cpu`.
 
 ## 0.11.0
 
