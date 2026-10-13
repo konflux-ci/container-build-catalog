@@ -1,13 +1,27 @@
 - op: replace
   path: /metadata/name
   value: prefetch-dependencies-oci-ta-min
-# kustomize build task/prefetch-dependencies-oci-ta/0.3 | yq '.spec.steps.[].name' | nl -v 0
+# kustomize build task/prefetch-dependencies-oci-ta | yq '.spec.steps.[].name' | nl -v 0
 #      0	skip-ta
 #      1	use-trusted-artifact
 #      2	prefetch-dependencies
 #      3	create-trusted-artifact
 
-# prefetch-dependencies step
+# use-trusted-artifact step — intentional min floors (prod oci-ta uses 4Gi/50m)
+- op: test
+  path: /spec/steps/1/name
+  value: use-trusted-artifact
+- op: replace
+  path: /spec/steps/1/computeResources/limits/memory
+  value: 64Mi
+- op: replace
+  path: /spec/steps/1/computeResources/requests/memory
+  value: 64Mi
+- op: replace
+  path: /spec/steps/1/computeResources/requests/cpu
+  value: 50m
+
+# prefetch-dependencies step — keep shrink (inherits no limits.cpu from oci-ta)
 - op: test
   path: /spec/steps/2/name
   value: prefetch-dependencies
@@ -18,13 +32,10 @@
   path: /spec/steps/2/computeResources/requests/memory
   value: 256Mi
 - op: replace
-  path: /spec/steps/2/computeResources/limits/cpu
-  value: 100m
-- op: replace
   path: /spec/steps/2/computeResources/requests/cpu
   value: 100m
 
-# create-trusted-artifact step
+# create-trusted-artifact step — keep shrink
 - op: test
   path: /spec/steps/3/name
   value: create-trusted-artifact
@@ -34,9 +45,6 @@
 - op: replace
   path: /spec/steps/3/computeResources/requests/memory
   value: 256Mi
-- op: replace
-  path: /spec/steps/3/computeResources/limits/cpu
-  value: 100m
 - op: replace
   path: /spec/steps/3/computeResources/requests/cpu
   value: 100m

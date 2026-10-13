@@ -9,7 +9,13 @@ When you make changes without bumping the version right away, document them here
 If that's not something you ever plan to do, consider removing this section.
 -->
 
-*Nothing yet.*
+### Changed
+
+- Right-size compute resources for OOM relief (KONFLUX-14361), sized from 15d fleet MAX:
+  - `prefetch-dependencies`: memory `3Gi` → `6Gi` (req=lim), CPU request `1` → `1950m`, remove `limits.cpu`
+  - `create-trusted-artifact`: memory `3Gi` → `7Gi` (req=lim), CPU request `1` → `1100m`, remove `limits.cpu`
+  - `use-trusted-artifact`: set CBC TA standard `4Gi` / `50m` (was unset)
+
 
 ## 0.11.0
 
