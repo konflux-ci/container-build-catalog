@@ -160,6 +160,7 @@ spec:
           name: trusted-ca
           readOnly: true
           subPath: ca-bundle.crt
+      # KONFLUX-14361 / ta-generator@v1.2.0 baseline
       computeResources:
         limits:
           memory: 3Gi
@@ -258,11 +259,10 @@ spec:
         konflux-build-cli prefetch-dependencies
       computeResources:
         limits:
-          cpu: "1"
-          memory: 3Gi
+          memory: 6Gi
         requests:
-          cpu: "1"
-          memory: 3Gi
+          cpu: 1950m
+          memory: 6Gi
       when:
         - input: $(params.input)
           operator: notin
@@ -284,12 +284,13 @@ spec:
       env:
         - name: IMAGE_EXPIRES_AFTER
           value: $(params.ociArtifactExpiresAfter)
+      # KONFLUX-14361: fleet MAX ~6.7Gi / ~1.02 cpu (heavy-tail vs p95 ~536Mi)
       computeResources:
         limits:
-          memory: 3Gi
+          memory: 7Gi
         requests:
-          cpu: 50m
-          memory: 3Gi
+          cpu: 1100m
+          memory: 7Gi
       when:
         - input: $(params.input)
           operator: notin

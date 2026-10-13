@@ -135,7 +135,6 @@ spec:
       - ""
   - computeResources:
       limits:
-        cpu: 100m
         memory: 256Mi
       requests:
         cpu: 100m
@@ -237,7 +236,6 @@ spec:
     - $(results.PREFETCH_ARTIFACT.path)=/var/workdir/prefetch
     computeResources:
       limits:
-        cpu: 100m
         memory: 256Mi
       requests:
         cpu: 100m
