@@ -160,7 +160,6 @@ spec:
           name: trusted-ca
           readOnly: true
           subPath: ca-bundle.crt
-      # KONFLUX-14361: was unset; CBC TA standard (covers fleet MAX ~1.2Gi)
       computeResources:
         limits:
           memory: 4Gi
@@ -284,7 +283,6 @@ spec:
       env:
         - name: IMAGE_EXPIRES_AFTER
           value: $(params.ociArtifactExpiresAfter)
-      # KONFLUX-14361: fleet MAX ~6.7Gi / ~1.02 cpu (heavy-tail vs p95 ~536Mi)
       computeResources:
         limits:
           memory: 7Gi
