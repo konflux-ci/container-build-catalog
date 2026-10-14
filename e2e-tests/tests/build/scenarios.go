@@ -10,23 +10,24 @@ import (
 )
 
 type TestScenarioSpec struct {
-	Name                string                      // Mandatory: Unique name in string format
-	Group               string                      // Mandatory: Group Name to group different sceanrios together
-	RepoName            string                      // Mandatory: Git repo to be used during the test
-	Host                string                      // Mandatory: git host where it is hosted, ex. github.com or gitlab.com
-	GitURL              string                      // Optional: Constructed during the test execution
-	Revision            string                      // Mandatory: Git Revision to be used during the test
-	DefaultBranch       string                      // Optional: Default branch to be used during the test, ff not defined, "main" will be used
-	AuthMode            string                      // Optional: Only for the gitlab related sceanrios
-	ContextDir          string                      // Mandatory: Context directory in the test repository
-	DockerFilePath      string                      // Mandatory: Docker file path in the test repository
-	PipelineBundleName  constants.BuildPipelineType // Mandatory: Pipeline Bundle Type to be used during the test
-	EnableHermetic      bool                        // Optional: Only applicable for the hermetic scenarios
-	PrefetchInput       string                      // Optional: Only applicable for the hermetic scenarios
-	CheckAdditionalTags bool                        // Optional: Only applicable for the additional tags test scenario
-	ManifestMediaType   string                      // Mandatory: to verify the resulting image's media type
-	OverrideMediaType   string                      // Optional: Only for the media type override verification scenarios
-	WorkingDirMount     string                      // Optional: Only for the oci-archive test scenario
+	Name                     string                      // Mandatory: Unique name in string format
+	Group                    string                      // Mandatory: Group Name to group different sceanrios together
+	RepoName                 string                      // Mandatory: Git repo to be used during the test
+	Host                     string                      // Mandatory: git host where it is hosted, ex. github.com or gitlab.com
+	GitURL                   string                      // Optional: Constructed during the test execution
+	Revision                 string                      // Mandatory: Git Revision to be used during the test
+	DefaultBranch            string                      // Optional: Default branch to be used during the test, ff not defined, "main" will be used
+	AuthMode                 string                      // Optional: Only for the gitlab related sceanrios
+	ContextDir               string                      // Mandatory: Context directory in the test repository
+	DockerFilePath           string                      // Mandatory: Docker file path in the test repository
+	PipelineBundleName       constants.BuildPipelineType // Mandatory: Pipeline Bundle Type to be used during the test
+	EnableHermetic           bool                        // Optional: Only applicable for the hermetic scenarios
+	PrefetchInput            string                      // Optional: Only applicable for the hermetic scenarios
+	CheckAdditionalTags      bool                        // Optional: Only applicable for the additional tags test scenario
+	ManifestMediaType        string                      // Mandatory: to verify the resulting image's media type
+	OverrideMediaType        string                      // Optional: Only for the media type override verification scenarios
+	WorkingDirMount          string                      // Optional: Only for the oci-archive test scenario
+	ConformaPolicyExclusions []string                    // Optional: Only for conforma validations, list of exclusion to be added to the policy during conforma validation
 }
 
 var TestScenarios = []TestScenarioSpec{
@@ -43,6 +44,10 @@ var TestScenarios = []TestScenarioSpec{
 		PrefetchInput:      "",
 		ManifestMediaType:  "oci",
 		OverrideMediaType:  "oci",
+		ConformaPolicyExclusions: []string{"hermetic_task", "rpm_repos", "source_image", "cve",
+			"tasks.required_tasks_found:tpa-scan", "base_image_registries.base_image_permitted:quay.io/devfile/python",
+			"test.no_erred_tests:ecosystem-cert-preflight-checks", "test.no_failed_tests:ecosystem-cert-preflight-checks",
+			"test.no_skipped_tests:sast-snyk-check"},
 	},
 	{
 		Name:               "sample-python-basic-oci-docker-build-oci-ta",
@@ -57,6 +62,10 @@ var TestScenarios = []TestScenarioSpec{
 		PrefetchInput:      "",
 		ManifestMediaType:  "oci",
 		OverrideMediaType:  "oci",
+		ConformaPolicyExclusions: []string{"hermetic_task", "rpm_repos", "source_image", "cve",
+			"tasks.required_tasks_found:tpa-scan", "base_image_registries.base_image_permitted:quay.io/devfile/python",
+			"test.no_erred_tests:ecosystem-cert-preflight-checks", "test.no_failed_tests:ecosystem-cert-preflight-checks",
+			"test.no_skipped_tests:sast-snyk-check-oci-ta"},
 	},
 	{
 		Name:               "sample-python-basic-symlink",
@@ -84,6 +93,10 @@ var TestScenarios = []TestScenarioSpec{
 		EnableHermetic:     false,
 		PrefetchInput:      "",
 		ManifestMediaType:  "docker",
+		ConformaPolicyExclusions: []string{"hermetic_task", "rpm_repos", "source_image", "cve",
+			"tasks.required_tasks_found:tpa-scan", "base_image_registries.base_image_permitted:quay.io/devfile/python",
+			"test.no_erred_tests:ecosystem-cert-preflight-checks", "test.no_failed_tests:ecosystem-cert-preflight-checks",
+			"test.no_skipped_tests:sast-snyk-check"},
 	},
 	{
 		Name:               "multiarch-oci",
@@ -125,6 +138,8 @@ var TestScenarios = []TestScenarioSpec{
 		PipelineBundleName: constants.DockerBuildOciTAMin,
 		EnableHermetic:     false,
 		ManifestMediaType:  "docker",
+		ConformaPolicyExclusions: []string{"hermetic_task", "rpm_repos", "source_image", "cve",
+			"base_image_registries.base_image_permitted:quay.io/devfile/python"},
 	},
 	{
 		Name:               "fbc",
@@ -151,6 +166,9 @@ var TestScenarios = []TestScenarioSpec{
 		EnableHermetic:     false,
 		PrefetchInput:      "",
 		ManifestMediaType:  "docker",
+		ConformaPolicyExclusions: []string{"hermetic_task", "rpm_repos", "source_image",
+			"tasks.required_tasks_found:tpa-scan", "test.no_erred_tests:ecosystem-cert-preflight-checks",
+			"test.no_failed_tests:ecosystem-cert-preflight-checks", "test.no_skipped_tests:sast-snyk-check"},
 	},
 	{
 		Name:               "oci-archive",
@@ -166,6 +184,9 @@ var TestScenarios = []TestScenarioSpec{
 		WorkingDirMount:    "/buildcontext",
 		ManifestMediaType:  "oci",
 		OverrideMediaType:  "oci",
+		ConformaPolicyExclusions: []string{"hermetic_task", "rpm_repos", "source_image",
+			"tasks.required_tasks_found:tpa-scan", "test.no_erred_tests:ecosystem-cert-preflight-checks",
+			"test.no_failed_tests:ecosystem-cert-preflight-checks", "test.no_skipped_tests:sast-snyk-check"},
 	},
 	{
 		Name:               "prefetch-gomod",
@@ -179,6 +200,9 @@ var TestScenarios = []TestScenarioSpec{
 		EnableHermetic:     true,
 		PrefetchInput:      "gomod",
 		ManifestMediaType:  "docker",
+		ConformaPolicyExclusions: []string{"rpm_repos", "source_image", "cve",
+			"sbom_spdx.hermeto_attribution_required", "tasks.required_tasks_found:tpa-scan",
+			"test.no_failed_tests:ecosystem-cert-preflight-checks", "test.no_skipped_tests:sast-snyk-check"},
 	},
 	{
 		Name:                "prefetch-pip",
@@ -193,6 +217,9 @@ var TestScenarios = []TestScenarioSpec{
 		PrefetchInput:       "pip",
 		CheckAdditionalTags: true,
 		ManifestMediaType:   "docker",
+		ConformaPolicyExclusions: []string{"source_image", "rpm_repos", "cve", "tasks.required_tasks_found:tpa-scan",
+			"sbom_spdx.allowed_package_sources", "test.no_failed_tests:ecosystem-cert-preflight-checks",
+			"test.no_skipped_tests:sast-snyk-check"},
 	},
 	{
 		Name:               "prefetch-bundler",
@@ -206,6 +233,8 @@ var TestScenarios = []TestScenarioSpec{
 		EnableHermetic:     true,
 		PrefetchInput:      "bundler",
 		ManifestMediaType:  "docker",
+		ConformaPolicyExclusions: []string{"source_image", "rpm_repos", "cve", "tasks.required_tasks_found:tpa-scan",
+			"test.no_failed_tests:ecosystem-cert-preflight-checks", "test.no_skipped_tests:sast-snyk-check"},
 	},
 	{
 		Name:               "prefetch-cargo",
@@ -219,6 +248,9 @@ var TestScenarios = []TestScenarioSpec{
 		EnableHermetic:     true,
 		PrefetchInput:      "cargo",
 		ManifestMediaType:  "docker",
+		ConformaPolicyExclusions: []string{"source_image", "rpm_repos", "cve",
+			"base_image_registries.base_image_permitted:quay.io/konflux-ci/rust-builder", "tasks.required_tasks_found:tpa-scan",
+			"test.no_skipped_tests:sast-snyk-check"},
 	},
 	{
 		Name:               "prefetch-npm",
@@ -232,6 +264,9 @@ var TestScenarios = []TestScenarioSpec{
 		EnableHermetic:     true,
 		PrefetchInput:      "npm",
 		ManifestMediaType:  "docker",
+		ConformaPolicyExclusions: []string{"source_image", "rpm_repos", "cve",
+			"tasks.required_tasks_found:tpa-scan", "test.no_failed_tests:ecosystem-cert-preflight-checks",
+			"test.no_skipped_tests:sast-snyk-check"},
 	},
 	{
 		Name:               "prefetch-yarn-classic",
@@ -245,6 +280,9 @@ var TestScenarios = []TestScenarioSpec{
 		EnableHermetic:     true,
 		PrefetchInput:      "yarn",
 		ManifestMediaType:  "docker",
+		ConformaPolicyExclusions: []string{"rpm_repos", "source_image", "tasks.required_tasks_found:tpa-scan",
+			"base_image_registries.base_image_permitted:docker.io/library/node", "test.no_erred_tests:ecosystem-cert-preflight-checks",
+			"test.no_failed_tests:ecosystem-cert-preflight-checks", "test.no_skipped_tests:sast-snyk-check"},
 	},
 	{
 		Name:               "prefetch-yarn-modern",
@@ -258,6 +296,9 @@ var TestScenarios = []TestScenarioSpec{
 		EnableHermetic:     true,
 		PrefetchInput:      "yarn",
 		ManifestMediaType:  "docker",
+		ConformaPolicyExclusions: []string{"rpm_repos", "source_image", "cve",
+			"tasks.required_tasks_found:tpa-scan", "base_image_registries.base_image_permitted:quay.io/konflux-ci/yarn4-nodejs22-ubi9-minimal",
+			"test.no_failed_tests:ecosystem-cert-preflight-checks", "test.no_skipped_tests:sast-snyk-check"},
 	},
 	{
 		Name:               "prefetch-rpm",
@@ -271,6 +312,8 @@ var TestScenarios = []TestScenarioSpec{
 		EnableHermetic:     true,
 		PrefetchInput:      "rpm",
 		ManifestMediaType:  "docker",
+		ConformaPolicyExclusions: []string{"rpm_repos", "source_image", "cve", "tasks.required_tasks_found:tpa-scan",
+			"test.no_failed_tests:ecosystem-cert-preflight-checks", "test.no_skipped_tests:sast-snyk-check"},
 	},
 	{
 		Name:               "prefetch-generic",
@@ -284,6 +327,10 @@ var TestScenarios = []TestScenarioSpec{
 		EnableHermetic:     true,
 		PrefetchInput:      "generic",
 		ManifestMediaType:  "docker",
+		ConformaPolicyExclusions: []string{"rpm_repos", "source_image", "cve", "sbom_spdx.allowed_package_sources",
+			"tasks.required_tasks_found:tpa-scan", "base_image_registries.base_image_permitted:docker.io/library/ibmjava",
+			"test.no_erred_tests:ecosystem-cert-preflight-checks", "test.no_failed_tests:ecosystem-cert-preflight-checks",
+			"test.no_skipped_tests:sast-snyk-check"},
 	},
 	{
 		Name:               "source-build-parent-image-with-digest-only",

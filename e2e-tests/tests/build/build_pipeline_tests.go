@@ -63,17 +63,13 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 					ecpSource := conforma.Source{
 						Config: &conforma.SourceConfig{
 							Include: []string{"@redhat"},
-							Exclude: []string{"hermetic_task", "rpm_repos", "source_image", "cve",
-								"base_image_registries.base_image_permitted:quay.io/devfile/python", "base_image_registries.base_image_permitted:quay.io/konflux-ci/rust-builder",
-								"base_image_registries.base_image_permitted:docker.io/library/node", "base_image_registries.base_image_permitted:quay.io/konflux-ci/yarn4-nodejs22-ubi9-minimal",
-								"base_image_registries.base_image_permitted:docker.io/library/ibmjava", "tasks.required_tasks_found:tpa-scan", "test.no_erred_tests", "test.no_failed_tests", "test.no_skipped_tests",
-								"sbom_spdx.hermeto_attribution_required", "sbom_spdx.allowed_package_sources"},
+							Exclude: scenario.ConformaPolicyExclusions,
 						},
 					}
-					policy := contract.PolicySpecWithSource(defaultECP.Spec, ecpSource)
-					Expect(f.AsKubeAdmin.TektonController.CreateOrUpdatePolicyConfiguration(testNamespace, policy)).To(Succeed())
-
-					integrationTestScenario, err = CreateIntegrationTestScenario(f.AsKubeAdmin.IntegrationController, "", applicationName, testNamespace, itsGitURL, itsGitRevision, itsPipelinePathInRepo, "", []string{"application"}, ecPolicyName)
+					ecpSpec := contract.PolicySpecWithSource(defaultECP.Spec, ecpSource)
+					_, err = f.AsKubeAdmin.TektonController.CreateEnterpriseContractPolicy(ecPolicyName, testNamespace, ecpSpec)
+					Expect(err).ShouldNot(HaveOccurred())
+					integrationTestScenario, err = CreateIntegrationTestScenario(f.AsKubeAdmin.IntegrationController, "", applicationName, testNamespace, itsGitURL, itsGitRevision, itsPipelinePathInRepo, []string{"application"}, ecPolicyName)
 					Expect(err).ShouldNot(HaveOccurred())
 				}
 			})
@@ -306,7 +302,30 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 				Expect(err).ShouldNot(HaveOccurred())
 				_, err = f.AsKubeDeveloper.IntegrationController.WaitForIntegrationPipelineToGetStarted(integrationTestScenario.Name, snapshot.Name, testNamespace)
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(f.AsKubeAdmin.IntegrationController.WaitForIntegrationPipelineToBeFinished(integrationTestScenario, snapshot, testNamespace)).Should(Succeed(), fmt.Sprintf("failed when waiting for the conforma pipelinerun %s/%s to finish", testNamespace, integrationTestScenario.GetName()))
+				err = f.AsKubeAdmin.IntegrationController.WaitForIntegrationPipelineToBeFinished(integrationTestScenario, snapshot, testNamespace)
+				// Print the logs in case the conforma pipeline run fails
+				if err != nil {
+					pipelineRun, err1 := f.AsKubeDeveloper.IntegrationController.GetIntegrationPipelineRun(integrationTestScenario.Name, snapshot.Name, testNamespace)
+					if err1 != nil {
+						GinkgoWriter.Printf("failed to get integration pipelinerun with error: %v\n", err1)
+					}
+					for _, chr := range pipelineRun.Status.ChildReferences {
+						if strings.Contains(chr.PipelineTaskName, "verify") {
+							logs, err2 := f.AsKubeAdmin.TektonController.GetTaskRunLogs(pipelineRun.Name, chr.PipelineTaskName, testNamespace)
+							if err2 != nil {
+								GinkgoWriter.Printf("skipping: %s: %s\n", chr.PipelineTaskName, err2)
+								continue
+							}
+							for container, out := range logs {
+								// full log is too long, print only step details report container log for debugging
+								if container == "step-detailed-report" {
+									GinkgoWriter.Printf("=== %s / %s ===\n%s\n", chr.PipelineTaskName, container, out)
+								}
+							}
+						}
+					}
+				}
+				Expect(err).ShouldNot(HaveOccurred(), fmt.Sprintf("conforma pipelinerun failed with: %v", err))
 			})
 		})
 

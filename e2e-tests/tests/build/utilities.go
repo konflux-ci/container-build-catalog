@@ -432,7 +432,7 @@ func EnsureOriginalDockerfileIsPushed(hub *framework.ControllerHub, pr *tektonpi
 	Fail(fmt.Sprintf("Dockerfile is not found from the pulled artifacts for %s", dockerfileImage))
 }
 
-func CreateIntegrationTestScenario(i *integrationClient.IntegrationController, itsName, applicationName, namespace, gitURL, revision, pathInRepo, kind string, contexts []string, policyConfig string) (*integrationApi.IntegrationTestScenario, error) {
+func CreateIntegrationTestScenario(i *integrationClient.IntegrationController, itsName, applicationName, namespace, gitURL, revision, pathInRepo string, contexts []string, policyConfig string) (*integrationApi.IntegrationTestScenario, error) {
 	if itsName == "" {
 		itsName = "my-integration-test-" + util.GenerateRandomString(4)
 	}
@@ -472,12 +472,6 @@ func CreateIntegrationTestScenario(i *integrationClient.IntegrationController, i
 			},
 			Contexts: []integrationApi.TestContext{},
 		},
-	}
-
-	// Add kind parameter if provided and is "pipelineRun"
-	if strings.EqualFold(kind, "pipelineRun") {
-		integrationTestScenario.Spec.ResolverRef.ResourceKind = "pipelinerun"
-
 	}
 
 	if len(contexts) > 0 {
