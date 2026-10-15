@@ -35,6 +35,12 @@ spec:
       description: Git revision for catalog-git-url.
       default: main
       type: string
+    - name: e2e-bundle-mode
+      description: >-
+        Group ITS only when needed: task or pipeline. Empty = auto (component name, or group PR
+        with only task dirs or only pipeline dirs). Required on group ITS when the PR changes both.
+      default: ""
+      type: string
   tasks:
     - name: prepare-e2e
       taskRef:
@@ -49,6 +55,8 @@ spec:
       params:
         - name: SNAPSHOT
           value: $(params.SNAPSHOT)
+        - name: e2e-bundle-mode
+          value: $(params.e2e-bundle-mode)
     - name: create-test-pipeline-bundle
       runAfter:
         - prepare-e2e
