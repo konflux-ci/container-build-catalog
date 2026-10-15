@@ -1,7 +1,9 @@
 ---
+# Note: use-trusted-artifact is an additionalStep (not recipe `add:`) so
+# computeResources survive `hack/generate-ta-tasks.sh` / check-ta CI
+# (ta-generator@v1.1.0 leaves use-trusted-artifact unset).
 base: ../push-dockerfile/push-dockerfile.yaml
-add:
-  - use-source
+add: []
 preferStepTemplate: true
 removeWorkspaces:
   - workspace
@@ -9,3 +11,20 @@ replacements:
   workspaces.workspace.path: /var/workdir
 description: |-
   Discover Dockerfile from source code and push it to registry as an OCI artifact.
+addParams:
+  - name: SOURCE_ARTIFACT
+    type: string
+    description: The Trusted Artifact URI pointing to the artifact with the application source code.
+additionalSteps:
+  - at: 0
+    name: use-trusted-artifact
+    image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:7b4f5bbf8b8aa663beaf18bfef4fd16ba1cb5ce846d1fc776a64b312c52ee28c
+    args:
+      - use
+      - $(params.SOURCE_ARTIFACT)=/var/workdir/source
+    computeResources:
+      limits:
+        memory: 4Gi
+      requests:
+        cpu: 50m
+        memory: 4Gi
