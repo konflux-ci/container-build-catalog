@@ -1,0 +1,18 @@
+# Merge patch for the target TektonConfig. Apply through the deployment's
+# configuration repository before rolling out the base-image task results.
+# Sidecar logs avoid the shared termination-message limit. The larger per-result
+# limit accommodates BASE_IMAGES_DIGESTS with five long image references.
+apiVersion: operator.tekton.dev/v1alpha1
+kind: TektonConfig
+metadata:
+  name: config
+spec:
+  pipeline:
+    options:
+      configMaps:
+        feature-flags:
+          data:
+            results-from: sidecar-logs
+            max-result-size: "16384"
+  chain:
+    artifacts.pipelinerun.enable-deep-inspection: "true"
