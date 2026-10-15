@@ -12,6 +12,8 @@ See the [pipeline bundle management design](../docs/design/pipeline-bundle-manag
 
 When running `konflux-e2e-tests` from a fork or feature branch, set IntegrationTestScenario pipeline parameters `catalog-git-url` and `catalog-git-revision` to the same values as the scenario git resolver (Tekton cannot use `prepare-e2e` results in git task resolvers).
 
+For **group** integration tests, set pipeline parameter `e2e-bundle-mode` to `task` or `pipeline` on the scenario (task application group vs pipeline application group). Component tests infer mode from the component name. If a group PR changes both task and pipeline catalog directories, `e2e-bundle-mode` is required on the scenario.
+
 ## Scenario Groups
 
 Scenarios are organized into the following groups:

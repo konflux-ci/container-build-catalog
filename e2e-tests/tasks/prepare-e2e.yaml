@@ -50,6 +50,9 @@ spec:
   params:
     - name: SNAPSHOT
       description: The JSON string of the Snapshot under test.
+    - name: e2e-bundle-mode
+      description: Group ITS override (task or pipeline). Empty = auto-detect.
+      default: ""
   steps:
     - name: prepare-e2e
       image: quay.io/konflux-qe-incubator/konflux-qe-tools:latest
@@ -57,6 +60,8 @@ spec:
       env:
         - name: SNAPSHOT
           value: $(params.SNAPSHOT)
+        - name: E2E_BUNDLE_MODE_ITS
+          value: $(params.e2e-bundle-mode)
         - name: KONFLUX_COMPONENT_NAME
           valueFrom:
             fieldRef:
@@ -298,7 +303,9 @@ spec:
           exit 0
         fi
 
+        # component: mode from component name. group: auto from PR dirs, or ITS e2e-bundle-mode when mixed.
         E2E_BUNDLE_MODE=""
+        its_mode="${E2E_BUNDLE_MODE_ITS// }"
 
         if [[ "$TEST_TYPE" == "component" ]]; then
           if [[ "$KONFLUX_COMPONENT_NAME" == pipeline-* ]]; then
@@ -307,13 +314,30 @@ spec:
             E2E_BUNDLE_MODE="task"
           fi
         elif [[ "$TEST_TYPE" == "group" ]]; then
-          if $has_task_changes && ! $has_pipeline_changes; then
+          if $has_task_changes && $has_pipeline_changes; then
+            if [[ -z "$its_mode" ]]; then
+              echo "[ERROR] group test: PR has task and pipeline catalog changes; set ITS pipeline param e2e-bundle-mode to task or pipeline"
+              exit 1
+            fi
+            case "$its_mode" in
+              task|pipeline) E2E_BUNDLE_MODE="$its_mode" ;;
+              *)
+                echo "[ERROR] invalid e2e-bundle-mode (expected task or pipeline): ${its_mode}"
+                exit 1
+                ;;
+            esac
+          elif [[ -n "$its_mode" ]]; then
+            case "$its_mode" in
+              task|pipeline) E2E_BUNDLE_MODE="$its_mode" ;;
+              *)
+                echo "[ERROR] invalid e2e-bundle-mode (expected task or pipeline): ${its_mode}"
+                exit 1
+                ;;
+            esac
+          elif $has_task_changes; then
             E2E_BUNDLE_MODE="task"
-          elif ! $has_task_changes && $has_pipeline_changes; then
+          elif $has_pipeline_changes; then
             E2E_BUNDLE_MODE="pipeline"
-          elif $has_task_changes && $has_pipeline_changes; then
-            # Two integrations per design (task inject + pipeline as-is); task app group run uses task mode.
-            E2E_BUNDLE_MODE="task"
           fi
         else
           echo "[ERROR] Unknown TEST_TYPE for e2e-bundle-mode: $TEST_TYPE"
@@ -341,10 +365,10 @@ spec:
         echo -n "$TEST_TYPE" > "$(results.snapshot-type.path)"
         echo -n "$E2E_BUNDLE_MODE" > "$(results.e2e-bundle-mode.path)"
 
-        if [[ -n "$changed_tasks" ]]; then
-            scenario_group="$(determine_scenario_group "$changed_tasks")"
-        elif [[ -n "$changed_pipelines" ]]; then
+        if [[ "$E2E_BUNDLE_MODE" == "pipeline" ]]; then
             scenario_group="$(determine_scenario_group "$changed_pipelines")"
+        else
+            scenario_group="$(determine_scenario_group "$changed_tasks")"
         fi
         echo "SCENARIO GROUP: ${scenario_group}"
         echo -n "$scenario_group" > "$(results.scenario-group.path)"
