@@ -11,6 +11,13 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.13.1
+
+### Changed
+
+- Mobster revision updated.
+- SBOMs now preserve Syft relationships even for Hermeto-prefetched packages.
+
 ## 0.13.0
 
 ### Changed
