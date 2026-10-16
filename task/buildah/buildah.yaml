@@ -445,7 +445,7 @@ spec:
         security_args+=(--cap-add "${ADD_CAPABILITIES}")
       fi
 
-      if [ -f "$(workspaces.source.path)/prefetch/cachi2.env" ]; then
+      if [ -f "$(workspaces.source.path)/prefetch/prefetch.env" ]; then
         prefetch_dir="$(workspaces.source.path)/prefetch"
         # KBC defaults to ${prefetch_dir}/copy-*
         # Copy to a sibling dir instead in case we don't have write permissions to the prefetch_dir.
@@ -545,7 +545,7 @@ spec:
           --yum-repos-d-target "$YUM_REPOS_D_TARGET"
           --prefetch-dir "$prefetch_dir"
           --prefetch-dir-copy "$prefetch_dir_copy"
-          --prefetch-env-mount /cachi2/cachi2.env
+          --prefetch-env-mount /cachi2/prefetch.env
           --prefetch-output-mount /cachi2/output
           "${security_args[@]}"
           "${rhsm_args[@]}"
