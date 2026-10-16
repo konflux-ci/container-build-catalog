@@ -11,6 +11,16 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.15.0
+
+### Changed
+
+- Prefetch env file `cachi2.env` is now `prefetch.env`.
+- Build mounts `/cachi2/cachi2.env` and `/cachi2/output` are now `/prefetch/prefetch.env` and `/prefetch/output`.
+- The same content is also mounted at the legacy `/cachi2` paths so existing
+  Dockerfiles keep working. Prefer `/prefetch/...` and `prefetch.env` for new
+  references.
+
 ## 0.14.0
 
 ### Changed

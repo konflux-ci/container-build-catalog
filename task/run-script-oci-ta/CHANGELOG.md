@@ -6,6 +6,14 @@
 
 *Nothing yet.*
 
+## 0.1.4
+
+### Changed
+
+- Prefetch volume mount `/cachi2` is now `/prefetch`.
+- Scripts now source `/prefetch/prefetch.env` instead of `/cachi2/cachi2.env` or `/cachi2/prefetch.env`.
+- The same content is also mounted at the legacy `/cachi2` path so existing scripts keep working.
+
 ## 0.1.3
 
 ### Added
