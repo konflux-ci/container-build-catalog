@@ -206,12 +206,9 @@ spec:
         PREFETCH_MOUNT=""
         PREFETCH_SOURCE=""
         if [ -d "/var/workdir/prefetch" ]; then
-          # The mount point should stay /cachi2 because:
-          # a) that's what the prefetch task expects
-          # b) user scripts may be referring directly to /cachi2/output/deps/generic
-          PREFETCH_MOUNT="--volume /var/workdir/prefetch:/cachi2"
+          PREFETCH_MOUNT="--volume /var/workdir/prefetch:/prefetch"
           if [[ -f /var/workdir/prefetch/prefetch.env ]]; then
-            PREFETCH_SOURCE=". /cachi2/prefetch.env &&"
+            PREFETCH_SOURCE=". /prefetch/prefetch.env &&"
           fi
         fi
 
