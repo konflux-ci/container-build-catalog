@@ -115,6 +115,12 @@ spec:
   - args:
     - use
     - $(params.SOURCE_ARTIFACT)=/var/workdir/source
+    computeResources:
+      limits:
+        memory: 64Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
     image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:7b4f5bbf8b8aa663beaf18bfef4fd16ba1cb5ce846d1fc776a64b312c52ee28c
     name: use-trusted-artifact
     volumeMounts:
@@ -129,7 +135,6 @@ spec:
       - ""
   - computeResources:
       limits:
-        cpu: 100m
         memory: 256Mi
       requests:
         cpu: 100m
@@ -231,7 +236,6 @@ spec:
     - $(results.PREFETCH_ARTIFACT.path)=/var/workdir/prefetch
     computeResources:
       limits:
-        cpu: 100m
         memory: 256Mi
       requests:
         cpu: 100m
