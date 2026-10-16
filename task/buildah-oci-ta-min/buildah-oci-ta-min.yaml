@@ -579,8 +579,8 @@ spec:
         --yum-repos-d-target "$YUM_REPOS_D_TARGET"
         --prefetch-dir "$prefetch_dir"
         --prefetch-dir-copy "$prefetch_dir_copy"
-        --prefetch-env-mount /cachi2/prefetch.env
-        --prefetch-output-mount /cachi2/output
+        --prefetch-env-mount /prefetch/prefetch.env
+        --prefetch-output-mount /prefetch/output
         "${security_args[@]}"
         "${rhsm_args[@]}"
         "${sbom_args[@]}"
