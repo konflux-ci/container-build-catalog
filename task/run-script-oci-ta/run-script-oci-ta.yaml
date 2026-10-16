@@ -7,7 +7,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: image-build, konflux
   labels:
-    app.kubernetes.io/version: "0.1.3"
+    app.kubernetes.io/version: "0.1.4"
 spec:
   description: |-
     This task allows to run an script stored on the git repository and stores the resultant directory

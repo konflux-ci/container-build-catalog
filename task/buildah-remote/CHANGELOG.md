@@ -11,6 +11,14 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.15.0
+
+### Changed
+
+- The default prefetch environment file is now `prefetch.env`.
+- The build process uses `/prefetch/prefetch.env` and `/prefetch/output`.
+- The same content is temporarily mounted at the legacy `/cachi2/cachi2.env` and `/cachi2/output` paths.
+
 ## 0.14.1
 
 ### Changed

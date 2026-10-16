@@ -16,6 +16,14 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.12.0
+
+### Changed
+
+- The default prefetch environment file is now `prefetch.env`.
+- Prefetch output uses `/prefetch` instead of `/cachi2`.
+- Stopped writing `cachi2.env`. Only `prefetch.env` and `prefetch-env.json` are produced.
+
 ## 0.11.1
 
 - Hermeto release - <https://github.com/hermetoproject/hermeto/releases/tag/0.64.0>
