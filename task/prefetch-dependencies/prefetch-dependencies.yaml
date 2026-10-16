@@ -95,7 +95,6 @@ spec:
           value: /cachi2/output
         - name: KBC_PD_ENV_FILES
           value: >-
-            $(workspaces.source.path)/prefetch/cachi2.env
             $(workspaces.source.path)/prefetch/prefetch.env
             $(workspaces.source.path)/prefetch/prefetch-env.json
         - name: KBC_PD_GIT_AUTH_DIRECTORY
