@@ -92,7 +92,7 @@ spec:
         - name: KBC_PD_MODE
           value: $(params.mode)
         - name: KBC_PD_OUTPUT_DIR_MOUNT_POINT
-          value: /cachi2/output
+          value: /prefetch/output
         - name: KBC_PD_ENV_FILES
           value: >-
             $(workspaces.source.path)/prefetch/prefetch.env
