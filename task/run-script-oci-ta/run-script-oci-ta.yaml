@@ -211,11 +211,7 @@ spec:
           # b) user scripts may be referring directly to /cachi2/output/deps/generic
           PREFETCH_MOUNT="--volume /var/workdir/prefetch:/cachi2"
           if [[ -f /var/workdir/prefetch/prefetch.env ]]; then
-            echo "using prefetch.env file to enable prefetch integration"
             PREFETCH_SOURCE=". /cachi2/prefetch.env &&"
-          else
-            echo "using cachi2.env file to enable prefetch integration"
-            PREFETCH_SOURCE=". /cachi2/cachi2.env &&"
           fi
         fi
 
