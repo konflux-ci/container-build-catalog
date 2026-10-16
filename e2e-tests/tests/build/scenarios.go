@@ -47,7 +47,8 @@ var TestScenarios = []TestScenarioSpec{
 		ConformaPolicyExclusions: []string{"hermetic_task", "rpm_repos", "source_image", "cve",
 			"tasks.required_tasks_found:tpa-scan", "base_image_registries.base_image_permitted:quay.io/devfile/python",
 			"test.no_erred_tests:ecosystem-cert-preflight-checks", "test.no_failed_tests:ecosystem-cert-preflight-checks",
-			"test.no_skipped_tests:sast-snyk-check", "tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"test.no_skipped_tests:sast-snyk-check", "tasks.required_untrusted_task_found", "trusted_task.trusted",
+			"slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:               "sample-python-basic-oci-docker-build-oci-ta",
@@ -65,7 +66,8 @@ var TestScenarios = []TestScenarioSpec{
 		ConformaPolicyExclusions: []string{"hermetic_task", "rpm_repos", "source_image", "cve",
 			"tasks.required_tasks_found:tpa-scan", "base_image_registries.base_image_permitted:quay.io/devfile/python",
 			"test.no_erred_tests:ecosystem-cert-preflight-checks", "test.no_failed_tests:ecosystem-cert-preflight-checks",
-			"test.no_skipped_tests:sast-snyk-check-oci-ta", "tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"test.no_skipped_tests:sast-snyk-check-oci-ta", "tasks.required_untrusted_task_found", "trusted_task.trusted",
+			"slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:               "sample-python-basic-symlink",
@@ -96,7 +98,8 @@ var TestScenarios = []TestScenarioSpec{
 		ConformaPolicyExclusions: []string{"hermetic_task", "rpm_repos", "source_image", "cve",
 			"tasks.required_tasks_found:tpa-scan", "base_image_registries.base_image_permitted:quay.io/devfile/python",
 			"test.no_erred_tests:ecosystem-cert-preflight-checks", "test.no_failed_tests:ecosystem-cert-preflight-checks",
-			"test.no_skipped_tests:sast-snyk-check", "tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"test.no_skipped_tests:sast-snyk-check", "tasks.required_untrusted_task_found", "trusted_task.trusted",
+			"slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:               "multiarch-oci",
@@ -139,7 +142,8 @@ var TestScenarios = []TestScenarioSpec{
 		EnableHermetic:     false,
 		ManifestMediaType:  "docker",
 		ConformaPolicyExclusions: []string{"hermetic_task", "rpm_repos", "source_image", "cve",
-			"base_image_registries.base_image_permitted:quay.io/devfile/python", "tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"base_image_registries.base_image_permitted:quay.io/devfile/python", "tasks.required_untrusted_task_found",
+			"trusted_task.trusted", "slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:               "fbc",
@@ -169,7 +173,7 @@ var TestScenarios = []TestScenarioSpec{
 		ConformaPolicyExclusions: []string{"hermetic_task", "rpm_repos", "source_image",
 			"tasks.required_tasks_found:tpa-scan", "test.no_erred_tests:ecosystem-cert-preflight-checks",
 			"test.no_failed_tests:ecosystem-cert-preflight-checks", "test.no_skipped_tests:sast-snyk-check",
-			"tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"tasks.required_untrusted_task_found", "trusted_task.trusted", "slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:               "oci-archive",
@@ -188,7 +192,7 @@ var TestScenarios = []TestScenarioSpec{
 		ConformaPolicyExclusions: []string{"hermetic_task", "rpm_repos", "source_image",
 			"tasks.required_tasks_found:tpa-scan", "test.no_erred_tests:ecosystem-cert-preflight-checks",
 			"test.no_failed_tests:ecosystem-cert-preflight-checks", "test.no_skipped_tests:sast-snyk-check",
-			"tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"tasks.required_untrusted_task_found", "trusted_task.trusted", "slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:               "prefetch-gomod",
@@ -205,7 +209,7 @@ var TestScenarios = []TestScenarioSpec{
 		ConformaPolicyExclusions: []string{"rpm_repos", "source_image", "cve",
 			"sbom_spdx.hermeto_attribution_required", "tasks.required_tasks_found:tpa-scan",
 			"test.no_failed_tests:ecosystem-cert-preflight-checks", "test.no_skipped_tests:sast-snyk-check",
-			"tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"tasks.required_untrusted_task_found", "trusted_task.trusted", "slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:                "prefetch-pip",
@@ -222,7 +226,8 @@ var TestScenarios = []TestScenarioSpec{
 		ManifestMediaType:   "docker",
 		ConformaPolicyExclusions: []string{"source_image", "rpm_repos", "cve", "tasks.required_tasks_found:tpa-scan",
 			"sbom_spdx.allowed_package_sources", "test.no_failed_tests:ecosystem-cert-preflight-checks",
-			"test.no_skipped_tests:sast-snyk-check", "tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"test.no_skipped_tests:sast-snyk-check", "tasks.required_untrusted_task_found", "trusted_task.trusted",
+			"slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:               "prefetch-bundler",
@@ -238,7 +243,7 @@ var TestScenarios = []TestScenarioSpec{
 		ManifestMediaType:  "docker",
 		ConformaPolicyExclusions: []string{"source_image", "rpm_repos", "cve", "tasks.required_tasks_found:tpa-scan",
 			"test.no_failed_tests:ecosystem-cert-preflight-checks", "test.no_skipped_tests:sast-snyk-check",
-			"tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"tasks.required_untrusted_task_found", "trusted_task.trusted", "slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:               "prefetch-cargo",
@@ -254,7 +259,8 @@ var TestScenarios = []TestScenarioSpec{
 		ManifestMediaType:  "docker",
 		ConformaPolicyExclusions: []string{"source_image", "rpm_repos", "cve",
 			"base_image_registries.base_image_permitted:quay.io/konflux-ci/rust-builder", "tasks.required_tasks_found:tpa-scan",
-			"test.no_skipped_tests:sast-snyk-check", "tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"test.no_skipped_tests:sast-snyk-check", "tasks.required_untrusted_task_found",
+			"trusted_task.trusted", "slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:               "prefetch-npm",
@@ -270,7 +276,8 @@ var TestScenarios = []TestScenarioSpec{
 		ManifestMediaType:  "docker",
 		ConformaPolicyExclusions: []string{"source_image", "rpm_repos", "cve",
 			"tasks.required_tasks_found:tpa-scan", "test.no_failed_tests:ecosystem-cert-preflight-checks",
-			"test.no_skipped_tests:sast-snyk-check", "tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"test.no_skipped_tests:sast-snyk-check", "tasks.required_untrusted_task_found",
+			"trusted_task.trusted", "slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:               "prefetch-yarn-classic",
@@ -287,7 +294,7 @@ var TestScenarios = []TestScenarioSpec{
 		ConformaPolicyExclusions: []string{"rpm_repos", "source_image", "tasks.required_tasks_found:tpa-scan",
 			"base_image_registries.base_image_permitted:docker.io/library/node", "test.no_erred_tests:ecosystem-cert-preflight-checks",
 			"test.no_failed_tests:ecosystem-cert-preflight-checks", "test.no_skipped_tests:sast-snyk-check",
-			"tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"tasks.required_untrusted_task_found", "trusted_task.trusted", "slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:               "prefetch-yarn-modern",
@@ -304,7 +311,7 @@ var TestScenarios = []TestScenarioSpec{
 		ConformaPolicyExclusions: []string{"rpm_repos", "source_image", "cve",
 			"tasks.required_tasks_found:tpa-scan", "base_image_registries.base_image_permitted:quay.io/konflux-ci/yarn4-nodejs22-ubi9-minimal",
 			"test.no_failed_tests:ecosystem-cert-preflight-checks", "test.no_skipped_tests:sast-snyk-check",
-			"tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"tasks.required_untrusted_task_found", "trusted_task.trusted", "slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:               "prefetch-rpm",
@@ -320,7 +327,7 @@ var TestScenarios = []TestScenarioSpec{
 		ManifestMediaType:  "docker",
 		ConformaPolicyExclusions: []string{"rpm_repos", "source_image", "cve", "tasks.required_tasks_found:tpa-scan",
 			"test.no_failed_tests:ecosystem-cert-preflight-checks", "test.no_skipped_tests:sast-snyk-check",
-			"tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"tasks.required_untrusted_task_found", "trusted_task.trusted", "slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:               "prefetch-generic",
@@ -337,7 +344,8 @@ var TestScenarios = []TestScenarioSpec{
 		ConformaPolicyExclusions: []string{"rpm_repos", "source_image", "cve", "sbom_spdx.allowed_package_sources",
 			"tasks.required_tasks_found:tpa-scan", "base_image_registries.base_image_permitted:docker.io/library/ibmjava",
 			"test.no_erred_tests:ecosystem-cert-preflight-checks", "test.no_failed_tests:ecosystem-cert-preflight-checks",
-			"test.no_skipped_tests:sast-snyk-check", "tasks.required_untrusted_task_found", "trusted_task.trusted"},
+			"test.no_skipped_tests:sast-snyk-check", "tasks.required_untrusted_task_found", "trusted_task.trusted",
+			"slsa_build_scripted_build.image_built_by_trusted_task"},
 	},
 	{
 		Name:               "source-build-parent-image-with-digest-only",
