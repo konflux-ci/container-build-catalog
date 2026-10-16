@@ -9,12 +9,15 @@ When you make changes without bumping the version right away, document them here
 If that's not something you ever plan to do, consider removing this section.
 -->
 
+*Nothing yet.*
+
+## 0.3.2
+
 ### Changed
 
-- Set `use-trusted-artifact` computeResources to project TA standard (4Gi memory req=lim, 50m CPU request, no limits.cpu) via recipe `additionalSteps` so values survive generate-ta / check-ta (KONFLUX-16159).
-
-
-*Nothing yet.*
+- Set `use-trusted-artifact` computeResources to project TA standard (4Gi memory
+  req=lim, 50m CPU request, no limits.cpu) via recipe `additionalSteps` so
+  values survive generate-ta / check-ta.
 
 ## 0.3.1
 
