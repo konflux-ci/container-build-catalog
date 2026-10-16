@@ -366,7 +366,7 @@ spec:
         echo -n "$E2E_BUNDLE_MODE" > "$(results.e2e-bundle-mode.path)"
 
         if [[ "$E2E_BUNDLE_MODE" == "pipeline" ]]; then
-            scenario_group="$(determine_scenario_group "$changed_pipelines")"
+            scenario_group="basic"
         else
             scenario_group="$(determine_scenario_group "$changed_tasks")"
         fi
