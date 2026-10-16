@@ -6,6 +6,15 @@
 
 *Nothing yet.*
 
+## 0.2.0
+
+### Changed
+
+- Prefetch volume mount `/cachi2` is now `/prefetch`.
+- Scripts now source `/prefetch/prefetch.env` instead of `/cachi2/cachi2.env` or `/cachi2/prefetch.env`.
+
+Compatible with `prefetch-dependencies-oci-ta` >= 0.12.0
+
 ## 0.1.3
 
 ### Added

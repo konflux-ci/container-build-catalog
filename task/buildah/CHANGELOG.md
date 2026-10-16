@@ -11,6 +11,15 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.15.0
+
+### Changed
+
+- Prefetch env file `cachi2.env` is now `prefetch.env`.
+- Build mounts `/cachi2/cachi2.env` and `/cachi2/output` are now `/prefetch/prefetch.env` and `/prefetch/output`.
+
+Compatible with `prefetch-dependencies` >= 0.12.0
+
 ## 0.14.0
 
 ### Changed

@@ -11,6 +11,15 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.12.0
+
+### Changed
+
+- Stopped writing `cachi2.env`. Only `prefetch.env` and `prefetch-env.json` are produced.
+- Renamed container mount `/cachi2` to `/prefetch`.
+
+Compatible with `buildah` >= 0.15.0
+
 ## 0.11.0
 
 ### Changed
