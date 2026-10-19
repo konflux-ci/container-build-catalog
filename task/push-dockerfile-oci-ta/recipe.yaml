@@ -1,9 +1,7 @@
 ---
 # Note: use-trusted-artifact is an additionalStep (not recipe `add:`) so
-# computeResources survive `hack/generate-ta-tasks.sh` / check-ta CI
-# (ta-generator@v1.1.0 leaves use-trusted-artifact unset).
+# computeResources survive `hack/generate-ta-tasks.sh` / check-ta CI.
 base: ../push-dockerfile/push-dockerfile.yaml
-add: []
 preferStepTemplate: true
 removeWorkspaces:
   - workspace
