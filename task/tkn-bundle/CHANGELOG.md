@@ -9,6 +9,16 @@ When you make changes without bumping the version right away, document them here
 If that's not something you ever plan to do, consider removing this section.
 -->
 
+*Nothing yet.*
+
+## 0.2.6
+
+### Changed
+
+- Version bump in lockstep with `tkn-bundle-oci-ta` 0.2.6 (oci-ta
+  `use-trusted-artifact` computeResources). No functional change in this base
+  task; ta-generator copies `app.kubernetes.io/version` from the base recipe.
+
 ## 0.2.5
 
 ### Changed
