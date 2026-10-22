@@ -67,8 +67,23 @@ When prefetch-dependencies task is activated it is using its artifacts to run bu
 |---|---|
 |IMAGE_DIGEST|Digest of the image just built|
 |IMAGE_REF|Image reference of the built image|
+|BASE_IMAGES_DIGESTS|Digest-qualified references of base images used for the build.|
+|BASE_IMAGE_1_ARTIFACT_INPUTS|Base image 1 for Tekton Chains provenance.|
+|BASE_IMAGE_2_ARTIFACT_INPUTS|Base image 2 for Tekton Chains provenance.|
+|BASE_IMAGE_3_ARTIFACT_INPUTS|Base image 3 for Tekton Chains provenance.|
+|BASE_IMAGE_4_ARTIFACT_INPUTS|Base image 4 for Tekton Chains provenance.|
+|BASE_IMAGE_5_ARTIFACT_INPUTS|Base image 5 for Tekton Chains provenance.|
 |IMAGE_URL|Image repository and tag where the built image was pushed|
 |SBOM_BLOB_URL|Reference of SBOM blob digest to enable digest-based verification from provenance|
 
 
 ## Additional info
+
+Chains receives up to five distinct base images as object results. The task fails
+on overflow and preserves `BASE_IMAGES_DIGESTS` for existing consumers.
+
+Before rollout, use a builder image with `--resolved-base-images-json-output`
+support and enable Chains pipeline deep inspection. Long references require
+compressed termination messages or sidecar logs with a sufficient result limit.
+The optional [TektonConfig patch](../../docs/base-image-provenance-tektonconfig-patch.yaml)
+configures sidecar logs with `max-result-size: "16384"` and deep inspection.

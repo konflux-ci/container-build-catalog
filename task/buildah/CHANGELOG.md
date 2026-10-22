@@ -9,7 +9,10 @@ When you make changes without bumping the version right away, document them here
 If that's not something you ever plan to do, consider removing this section.
 -->
 
-*Nothing yet.*
+### Added
+
+- Report up to five resolved base images as object results for Tekton Chains input
+  provenance, with an explicit overflow error. Preserve `BASE_IMAGES_DIGESTS`.
 
 ## 0.14.0
 
