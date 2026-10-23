@@ -1,9 +1,30 @@
 ---
+# Note: use-trusted-artifact is an additionalStep (not recipe `add:`) so
+# computeResources survive `hack/generate-ta-tasks.sh` / check-ta CI.
 base: ../source-build/source-build.yaml
-add:
-  - use-source
-  - use-prefetch
 newPrefetchNaming: true
+addParams:
+  - name: SOURCE_ARTIFACT
+    type: string
+    description: The Trusted Artifact URI pointing to the artifact with the application source code.
+  - name: PREFETCH_ARTIFACT
+    type: string
+    description: The Trusted Artifact URI pointing to the artifact with the prefetched dependencies.
+    default: ""
+additionalSteps:
+  - at: 0
+    name: use-trusted-artifact
+    image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:7b4f5bbf8b8aa663beaf18bfef4fd16ba1cb5ce846d1fc776a64b312c52ee28c
+    args:
+      - use
+      - $(params.SOURCE_ARTIFACT)=/var/workdir/source
+      - $(params.PREFETCH_ARTIFACT)=/var/workdir/prefetch
+    computeResources:
+      limits:
+        memory: 256Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
 removeWorkspaces:
   - workspace
 removeVolumes:

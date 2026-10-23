@@ -7,7 +7,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: konflux
   labels:
-    app.kubernetes.io/version: 0.4.0
+    app.kubernetes.io/version: 0.4.1
 spec:
   description: Source image build.
   params:
@@ -92,6 +92,12 @@ spec:
         - use
         - $(params.SOURCE_ARTIFACT)=/var/workdir/source
         - $(params.PREFETCH_ARTIFACT)=/var/workdir/prefetch
+      computeResources:
+        limits:
+          memory: 256Mi
+        requests:
+          cpu: 250m
+          memory: 256Mi
     - name: get-base-images
       image: quay.io/konflux-ci/task-runner:1.8.1@sha256:b9ef0479b57a494368a12a02886c650314c9ac7391c6228f21065865aab71c9e
       env:
