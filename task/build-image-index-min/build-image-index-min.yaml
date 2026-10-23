@@ -107,7 +107,7 @@ spec:
       requests:
         cpu: 100m
         memory: 256Mi
-    image: quay.io/konflux-ci/konflux-build-cli@sha256:337cc9e8f2a3e2d3756119e3abc7baa3a9114a7357c8f45c6937445055b4b7f3
+    image: quay.io/konflux-ci/konflux-build-cli@sha256:2daf005ab54773c850a04fe6413107bcd88462d74d950cc05d7585e602ca94e9
     name: build
     script: |
       #!/bin/bash
