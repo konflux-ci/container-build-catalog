@@ -1,0 +1,34 @@
+name: createBundle unit tests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'e2e-tests/createBundle.go'
+      - 'e2e-tests/createBundle_test.go'
+      - '.github/workflows/e2e-createbundle-unit-tests.yaml'
+  merge_group:
+    types: [checks_requested]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: createBundle unit tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: "${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}"
+
+      - name: Install Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: e2e-tests/go.mod
+          cache-dependency-path: e2e-tests/go.sum
+
+      - name: Run unit tests
+        working-directory: e2e-tests
+        run: go test -count=1 -v .
