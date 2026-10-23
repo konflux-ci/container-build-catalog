@@ -55,7 +55,7 @@ trap post_actions EXIT
 
 load_envs
 
-GINKGO_PROCS="${GINKGO_PROCS:-3}"
+GINKGO_PROCS="${GINKGO_PROCS:-2}"
 
 log "INFO" "Running container-build-catalog e2e tests with label filter: build-pipeline-e2e"
 
