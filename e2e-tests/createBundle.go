@@ -30,25 +30,49 @@ type SnapshotComponent struct {
 	ContainerImage string `json:"containerImage"`
 }
 
-func ParseSnapshotImages(snapshotJSON, snapshotType, componentNames string) (map[string]string, error) {
+const (
+	taskBundleMode     = "task"
+	pipelineBundleMode = "pipeline"
+)
+
+func ParseSnapshotImages(snapshotJSON, snapshotType, componentNames, e2eBundleMode string) (map[string]string, error) {
 	var snapshot Snapshot
 	if err := json.Unmarshal([]byte(snapshotJSON), &snapshot); err != nil {
 		return nil, fmt.Errorf("failed to parse snapshot JSON: %w", err)
 	}
-	componentImages := make(map[string]string, len(snapshot.Components))
-	componentNamesToBeParsed := strings.Split(componentNames, ",")
-	for _, c := range snapshot.Components {
-		// get only containerImages whose name matches which are in componentNames
-		if (snapshotType == "group" && slices.Contains(componentNamesToBeParsed, c.Name)) || (snapshotType == "component" && componentNamesToBeParsed[0] == c.Name) {
-			taskName := strings.TrimPrefix(c.Name, "task-")
-			componentImages[taskName] = c.ContainerImage
+	var componentPrefix string
+	switch e2eBundleMode {
+	case taskBundleMode:
+		componentPrefix = "task-"
+	case pipelineBundleMode:
+		componentPrefix = "pipeline-"
+	default:
+		return nil, fmt.Errorf("unsupported e2e bundle mode %q", e2eBundleMode)
+	}
+
+	componentNamesToBeParsed := make([]string, 0)
+	for _, name := range strings.Split(componentNames, ",") {
+		if name = strings.TrimSpace(name); name != "" {
+			componentNamesToBeParsed = append(componentNamesToBeParsed, name)
 		}
+	}
+	componentImages := make(map[string]string, len(componentNamesToBeParsed))
+	for _, c := range snapshot.Components {
+		selected := (snapshotType == "group" && slices.Contains(componentNamesToBeParsed, c.Name)) ||
+			(snapshotType == "component" && len(componentNamesToBeParsed) > 0 && componentNamesToBeParsed[0] == c.Name)
+		if selected && strings.HasPrefix(c.Name, componentPrefix) {
+			componentName := strings.TrimPrefix(c.Name, componentPrefix)
+			componentImages[componentName] = c.ContainerImage
+		}
+	}
+	if len(componentImages) == 0 {
+		return nil, fmt.Errorf("no snapshot components with prefix %q found matching %q", componentPrefix, componentNames)
 	}
 	return componentImages, nil
 }
 
-// updatedTaskBundleMap to contain updated task bundle references after extracting it from the snapshot
-var updatedTaskBundleMap map[string]string
+// updatedBundleMap contains the selected task or pipeline bundle references from the snapshot.
+var updatedBundleMap map[string]string
 
 // pipelinesNameList contains names of the current build pipelines
 var pipelinesNameList = []string{"docker-build", "docker-build-oci-ta", "docker-build-oci-ta-min", "docker-build-multi-platform-oci-ta", "fbc-builder"}
@@ -74,19 +98,43 @@ var pipelineVsResultsMap = map[string]string{
 }
 
 func main() {
-	if len(os.Args) < 4 {
-		fmt.Println("Please provide all the arguments. First value should be snapshot, second value should be snapshot_type and third value should be component_name")
+	if len(os.Args) < 5 {
+		fmt.Println("Please provide all the arguments. First value should be snapshot, second value should be snapshot_type, third value should be component_name, and fourth value should be e2e_bundle_mode")
 		os.Exit(1)
 	}
 	snapshotString := os.Args[1]
 	snapshotType := os.Args[2]
 	componentNames := os.Args[3]
+	e2eBundleMode := os.Args[4]
 
 	var err error
-	updatedTaskBundleMap, err = ParseSnapshotImages(snapshotString, snapshotType, componentNames)
+	updatedBundleMap, err = ParseSnapshotImages(snapshotString, snapshotType, componentNames, e2eBundleMode)
 	if err != nil {
 		fmt.Printf("[ERROR] failed to parse snapshot with error: %v\n", err)
 		os.Exit(1)
+	}
+
+	if e2eBundleMode == pipelineBundleMode {
+		for pipelineName := range updatedBundleMap {
+			if !slices.Contains(pipelinesNameList, pipelineName) {
+				fmt.Printf("[ERROR] unsupported pipeline component %q\n", pipelineName)
+				os.Exit(1)
+			}
+		}
+		for _, pipelineName := range pipelinesNameList {
+			bundleRef, err := resolvePipelineBundleRef(pipelineName, updatedBundleMap)
+			if err != nil {
+				fmt.Printf("[ERROR] could not resolve pipeline bundle for the pipeline %s: %v\n", pipelineName, err)
+				os.Exit(1)
+			}
+			resultPath := getResultPath(pipelineName)
+			if resultPath == "" {
+				fmt.Printf("[ERROR] could not find result path for the pipeline %s, exiting...", pipelineName)
+				os.Exit(1)
+			}
+			writeResult(resultPath, bundleRef)
+		}
+		return
 	}
 
 	err = fetchListOfTasksInEachPipeline()
@@ -138,7 +186,7 @@ func writeResult(resultPath, outputData string) {
 }
 
 func isPipelineChanged(pipelineName string) bool {
-	for taskName, _ := range updatedTaskBundleMap {
+	for taskName := range updatedBundleMap {
 		if slices.Contains(pipelineNameVsTaskListMap[pipelineName], taskName) {
 			return true
 		}
@@ -167,6 +215,13 @@ func getDefaultPipelineBundleRef(pipelineName string) (string, error) {
 	} else {
 		return "", fmt.Errorf("did not find default pipeline bundle associated with the pipeline name")
 	}
+}
+
+func resolvePipelineBundleRef(pipelineName string, snapshotBundles map[string]string) (string, error) {
+	if bundleRef, ok := snapshotBundles[pipelineName]; ok {
+		return bundleRef, nil
+	}
+	return getDefaultPipelineBundleRef(pipelineName)
 }
 
 func fetchListOfTasksInEachPipeline() error {
@@ -228,7 +283,7 @@ func createBuildPipelineBundle(pipelineName constants.BuildPipelineType) (string
 
 		for k, param := range t.TaskRef.Params {
 			if param.Name == "bundle" {
-				if bundle, ok := updatedTaskBundleMap[taskName]; ok {
+				if bundle, ok := updatedBundleMap[taskName]; ok {
 					t.TaskRef.Params[k].Value = *tektonpipeline.NewStructuredValues(bundle)
 					taskNames = append(taskNames, taskName)
 				}
