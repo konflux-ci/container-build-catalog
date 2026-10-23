@@ -160,6 +160,12 @@ spec:
           name: trusted-ca
           readOnly: true
           subPath: ca-bundle.crt
+      computeResources:
+        limits:
+          memory: 4Gi
+        requests:
+          cpu: 50m
+          memory: 4Gi
       when:
         - input: $(params.input)
           operator: notin
@@ -252,11 +258,10 @@ spec:
         konflux-build-cli prefetch-dependencies
       computeResources:
         limits:
-          cpu: "1"
-          memory: 3Gi
+          memory: 6Gi
         requests:
-          cpu: "1"
-          memory: 3Gi
+          cpu: 1950m
+          memory: 6Gi
       when:
         - input: $(params.input)
           operator: notin
@@ -280,10 +285,10 @@ spec:
           value: $(params.ociArtifactExpiresAfter)
       computeResources:
         limits:
-          memory: 3Gi
+          memory: 7Gi
         requests:
-          cpu: "1"
-          memory: 3Gi
+          cpu: 1100m
+          memory: 7Gi
       when:
         - input: $(params.input)
           operator: notin
