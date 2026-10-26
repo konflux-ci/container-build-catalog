@@ -1,0 +1,251 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  annotations:
+    build.appstudio.openshift.io/repo: https://github.com/konflux-ci/container-build-catalog?rev={{revision}}
+    build.appstudio.redhat.com/commit_sha: '{{revision}}'
+    build.appstudio.redhat.com/pull_request_number: '{{pull_request_number}}'
+    build.appstudio.redhat.com/target_branch: '{{target_branch}}'
+    pipelinesascode.tekton.dev/cancel-in-progress: "true"
+    pipelinesascode.tekton.dev/max-keep-runs: "3"
+    # Runs only if *every* file changed in the PR is under e2e-tests/ (or this
+    # PipelineRun definition itself). Any unrelated file in the same PR skips it.
+    pipelinesascode.tekton.dev/on-cel-expression: event == "pull_request" && target_branch
+      == "main" && files.all.exists(f, f.startsWith("e2e-tests/")) && files.all.all(f,
+      f.startsWith("e2e-tests/") || f == ".tekton/e2e-tests-on-pull-request.yaml")
+  labels:
+    appstudio.openshift.io/application: konflux-container-build-catalog
+    pipelines.appstudio.openshift.io/type: build
+  name: e2e-on-pull-request
+  namespace: rhtap-build-tenant
+spec:
+  timeouts:
+    pipeline: "2h30m"
+    tasks: "2h"
+    finally: "30m"
+  params:
+  - name: git-url
+    value: '{{source_url}}'
+  - name: revision
+    value: '{{revision}}'
+  pipelineSpec:
+    description: |
+      This pipeline is for validating e2e-tests on container-build-catalog repo when there is only e2e related change in the PR.
+    params:
+    - name: git-url
+      description: Source Repository URL  
+      type: string
+    - name: revision
+      description: Revision of the Source Repository
+      type: string
+    - name: oci-container-repo
+      description: The OCI container used to store all test artifacts.
+      type: string
+      default: 'quay.io/konflux-test-storage/konflux-team/container-build-catalog'
+    - name: konflux-test-infra-secret
+      description: The name of secret where testing infrastructures credentials are stored.
+      type: string
+      default: 'konflux-test-infra'
+    - name: artifact-browser-url
+      description: "URL to the artifact browser deployment. If provided, a link will be added to PR comments."
+      default: ""
+      type: string
+    tasks:
+      - name: provision-kind-cluster
+        taskRef:
+          resolver: git
+          params:
+            - name: url
+              value: https://github.com/konflux-ci/tekton-integration-catalog.git
+            - name: revision
+              value: main
+            - name: pathInRepo
+              value: tasks/mapt-oci/kind-aws-spot/provision/0.2/kind-aws-provision.yaml
+        params:
+          - name: secret-aws-credentials
+            value: mapt-kind-secret
+          - name: cluster-access-secret-name
+            value: kfg-$(context.pipelineRun.name)
+          - name: id
+            value: $(context.pipelineRun.name)
+          - name: tags
+            value: 'owner=konflux-devprod@redhat.com,project=Konflux,created-by=integration-pipeline,component=container-build-catalog'
+          - name: debug
+            value: 'false'
+          - name: ownerKind
+            value: PipelineRun
+          - name: ownerName
+            value: $(context.pipelineRun.name)
+          - name: ownerUid
+            value: $(context.pipelineRun.uid)
+          - name: oci-ref
+            value: $(params.oci-container-repo):$(context.pipelineRun.name)
+          - name: credentials-secret-name
+            value: $(params.konflux-test-infra-secret)
+          - name: extra-port-mappings
+            value: >-
+              '[{\"containerPort\":30012,\"hostPort\":8180,\"protocol\":\"TCP\"}]'
+          - name: cpus
+            value: 64
+          - name: memory
+            value: 128
+          - name: spot
+            value: 'false'
+          - name: harden-control-plane
+            value: 'true'
+      - name: deploy-konflux
+        runAfter:
+          - provision-kind-cluster
+        taskRef:
+          resolver: git
+          params:
+            - name: url
+              value: https://github.com/konflux-ci/konflux-ci
+            - name: revision
+              value: main
+            - name: pathInRepo
+              value: .tekton/tasks/deploy-konflux/task.yaml
+        params:
+          - name: cluster-access-secret
+            value: kfg-$(context.pipelineRun.name)
+          - name: konflux-ready-timeout
+            value: "30m"
+          - name: oci-container-repo
+            value: $(params.oci-container-repo)
+          - name: oci-container-repo-credentials-secret
+            value: $(params.konflux-test-infra-secret)
+          - name: pipeline-run-name
+            value: $(context.pipelineRun.name)
+      - name: container-build-catalog-e2e-tests
+        timeout: 2h
+        runAfter:
+          - deploy-konflux
+        taskRef:
+          resolver: git
+          params:
+            - name: url
+              value: https://github.com/konflux-ci/container-build-catalog.git
+            - name: revision
+              value: main
+            - name: pathInRepo
+              value: e2e-tests/tasks/container-build-catalog-e2e.yaml
+        params:
+          - name: git-url
+            value: $(params.git-url)
+          - name: git-revision
+            value: $(params.revision)
+          - name: oci-container
+            value: $(params.oci-container-repo):$(context.pipelineRun.name)
+          - name: cluster-access-secret-name
+            value: kfg-$(context.pipelineRun.name)
+          - name: test-environment
+            value: "upstream"
+          - name: scenario-group
+            value: "all"
+          - name: docker-build-pipeline-bundle
+            value: ""
+          - name: docker-build-oci-ta-pipeline-bundle
+            value: ""
+          - name: docker-build-oci-ta-min-pipeline-bundle
+            value: ""
+          - name: docker-build-multi-platform-oci-ta-pipeline-bundle
+            value: ""
+          - name: fbc-builder-pipeline-bundle
+            value: ""
+    finally:
+      - name: store-pipeline-status
+        taskRef:
+          resolver: git
+          params:
+            - name: url
+              value: https://github.com/konflux-ci/tekton-integration-catalog.git
+            - name: revision
+              value: main
+            - name: pathInRepo
+              value: tasks/store-pipeline-status/0.1/store-pipeline-status.yaml
+        params:
+          - name: oci-ref
+            value: "$(params.oci-container-repo):$(context.pipelineRun.name)"
+          - name: credentials-secret-name
+            value: "$(params.konflux-test-infra-secret)"
+          - name: pipelinerun-name
+            value: $(context.pipelineRun.name)
+          - name: pipeline-aggregate-status
+            value: $(tasks.status)
+      - name: deprovision-kind-cluster
+        taskRef:
+          resolver: git
+          params:
+            - name: url
+              value: https://github.com/konflux-ci/tekton-integration-catalog.git
+            - name: revision
+              value: main
+            - name: pathInRepo
+              value: tasks/mapt-oci/kind-aws-spot/deprovision/0.1/kind-aws-deprovision.yaml
+        params:
+          - name: secret-aws-credentials
+            value: mapt-kind-secret
+          - name: id
+            value: $(context.pipelineRun.name)
+          - name: cluster-access-secret
+            value: kfg-$(context.pipelineRun.name)
+          - name: oci-container
+            value: $(params.oci-container-repo):$(context.pipelineRun.name)
+          - name: oci-credentials
+            value: konflux-test-infra
+      - name: pull-request-status-message
+        taskRef:
+          resolver: git
+          params:
+            - name: url
+              value: https://github.com/konflux-ci/tekton-integration-catalog.git
+            - name: revision
+              value: main
+            - name: pathInRepo
+              value: tasks/pull-request-comment/0.1/pull-request-comment.yaml
+        params:
+          - name: test-name
+            value: $(context.pipelineRun.name)
+          - name: oci-container
+            value: $(params.oci-container-repo):$(context.pipelineRun.name)
+          - name: pipeline-aggregate-status
+            value: $(tasks.status)
+          - name: pull-request-author
+            value: "{{sender}}"
+          - name: pull-request-number
+            value: "{{pull_request_number}}"
+          - name: git-repo
+            value: "{{repo_name}}"
+          - name: git-org
+            value: "{{repo_owner}}"
+          - name: git-revision
+            value: "{{revision}}"
+          - name: junit-report-name
+            value: e2e-report.xml
+          - name: e2e-log-name
+            value: e2e-tests.log
+          - name: cluster-provision-log-name
+            value: kind-aws-provision.log
+          - name: enable-test-results-analysis
+            value: "true"
+          - name: artifact-browser-url
+            value: $(params.artifact-browser-url)
+    workspaces:
+    - name: workspace
+    - name: git-auth
+      optional: true
+  taskRunTemplate:
+    serviceAccountName: konflux-integration-runner
+  workspaces:
+  - name: workspace
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+  - name: git-auth
+    secret:
+      secretName: '{{ git_auth_secret }}'
+status: {}
