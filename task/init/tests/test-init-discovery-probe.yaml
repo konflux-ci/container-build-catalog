@@ -1,0 +1,21 @@
+---
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: test-init-discovery-probe
+spec:
+  description: Do not merge
+  workspaces:
+    - name: tests-workspace
+  tasks:
+    - name: fail-on-purpose
+      taskSpec:
+        steps:
+          - name: fail-on-purpose
+            image: quay.io/konflux-ci/task-runner:3.1.2@sha256:e272c1e1c60a4ecc72ff9c8d65bc48da534de6f1ce0d5aba79db3ac532d11c35
+            script: |
+              #!/bin/bash
+              set -euo pipefail
+              echo "FAILING ON PURPOSE: task-test discovery reached this file."
+              echo "If you can read this, dir_names_max_depth is working."
+              exit 1
