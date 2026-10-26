@@ -9,7 +9,9 @@ When you make changes without bumping the version right away, document them here
 If that's not something you ever plan to do, consider removing this section.
 -->
 
-*Nothing yet.*
+### Testing
+
+- Enhanced E2E test diagnostics to capture detailed failure information for build pipeline tests
 
 ## 0.3.2
 
