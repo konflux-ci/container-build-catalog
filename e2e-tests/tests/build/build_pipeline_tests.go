@@ -142,6 +142,48 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 				} else {
 					Expect(f.AsKubeAdmin.HasController.WaitForComponentPipelineToBeFinished(component, "", "", "",
 						f.AsKubeAdmin.TektonController, &has.RetryOptions{Retries: 2, Always: true}, buildPipelineRun)).To(Succeed())
+
+					// DIAGNOSTICS: Capture detailed failure information
+					finalPR, err := f.AsKubeAdmin.HasController.GetComponentPipelineRun(componentName, applicationName, testNamespace, "")
+					Expect(err).NotTo(HaveOccurred())
+
+					cond := finalPR.GetStatusCondition().GetCondition(apis.ConditionSucceeded)
+					GinkgoWriter.Printf("\n=== PIPELINERUN COMPLETION DIAGNOSTICS ===\n")
+					GinkgoWriter.Printf("PipelineRun: %s\n", finalPR.Name)
+					GinkgoWriter.Printf("Status: %s\n", cond.GetReason())
+					GinkgoWriter.Printf("Message: %s\n", cond.GetMessage())
+
+					// Show which tasks ran and their status
+					GinkgoWriter.Printf("\nTASK EXECUTION DETAILS:\n")
+					for _, child := range finalPR.Status.ChildReferences {
+						GinkgoWriter.Printf("  TaskRun: %s\n", child.PipelineTaskName)
+					}
+
+					// If cancelled, get logs from the failed task
+					if cond.GetReason() == "Cancelled" {
+						GinkgoWriter.Printf("\nPIPELINERUN WAS CANCELLED - COLLECTING LOGS FROM BUILD TASKS:\n")
+						for _, child := range finalPR.Status.ChildReferences {
+							if strings.Contains(child.PipelineTaskName, "build") || strings.Contains(child.PipelineTaskName, "prefetch") {
+								logs, logErr := f.AsKubeAdmin.TektonController.GetTaskRunLogs(finalPR.Name, child.PipelineTaskName, testNamespace)
+								if logErr == nil {
+									GinkgoWriter.Printf("\n  Task: %s\n", child.PipelineTaskName)
+									for container, output := range logs {
+										GinkgoWriter.Printf("    Container %s:\n%s\n", container, output)
+									}
+								} else {
+									GinkgoWriter.Printf("  Task: %s - Error getting logs: %v\n", child.PipelineTaskName, logErr)
+								}
+							}
+						}
+					}
+
+					// Show pipeline completion time
+					if finalPR.Status.StartTime != nil && finalPR.Status.CompletionTime != nil {
+						duration := finalPR.Status.CompletionTime.Time.Sub(finalPR.Status.StartTime.Time)
+						GinkgoWriter.Printf("\nPIPELINERUN EXECUTION TIME: %v\n", duration)
+					}
+
+					GinkgoWriter.Printf("=== END DIAGNOSTICS ===\n\n")
 				}
 			})
 			It("should push Dockerfile to registry", func() {
