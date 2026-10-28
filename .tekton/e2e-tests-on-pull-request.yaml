@@ -125,9 +125,9 @@ spec:
           resolver: git
           params:
             - name: url
-              value: https://github.com/konflux-ci/container-build-catalog.git
+              value: https://github.com/tisutisu/container-build-catalog.git # TODO: reference to be changed to konflux-ci
             - name: revision
-              value: main
+              value: e2e-pipeline # TODO: refrence to be changed to main
             - name: pathInRepo
               value: e2e-tests/tasks/container-build-catalog-e2e.yaml
         params:
