@@ -61,6 +61,16 @@ spec:
     default: activation-key
     description: Name of secret which contains subscription activation key
     type: string
+  results:
+  - name: DUMMY
+    # This can be removed once the fix in https://github.com/conforma/policy/pull/1945
+    # lands in Konflux production. Because updating Conforma in Konflux prod takes a
+    # while, this workaround is easier to unblock impacted teams and should be low risk.
+    # See also https://redhat.atlassian.net/browse/KFLUXSPRT-9412 .
+    description: Temporary workaround for a Conforma bug causing tasks with no results
+      to incorrectly parsed and hence dropped by Conforma in SLSA v1 attestations. The
+      value is ignored, we just need there to be any result present.
+    type: string
 
   stepTemplate:
     imagePullPolicy: IfNotPresent
@@ -167,6 +177,20 @@ spec:
         fi
 
         konflux-build-cli prefetch-dependencies
+
+    - name: emit-dummy-result
+      image: quay.io/konflux-ci/hermeto:0.63.0@sha256:cad54694e0b9ebcbb65eac5f3943154518ab60876a5df41317b5f399df484006
+      computeResources:
+        limits:
+          memory: 64Mi
+        requests:
+          cpu: 50m
+          memory: 64Mi
+      script: |
+        #!/bin/bash
+        # Always emit a dummy result so the task has at least one result present.
+        # The value is ignored; see the DUMMY result declaration above for details.
+        echo -n "ignored" | tee "$(results.DUMMY.path)"
 
   workspaces:
   - name: source

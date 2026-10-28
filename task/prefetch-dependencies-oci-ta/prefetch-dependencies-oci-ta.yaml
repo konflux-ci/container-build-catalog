@@ -79,6 +79,12 @@ spec:
         cyclonedx.'
       default: spdx
   results:
+    - name: DUMMY
+      description: Temporary workaround for a Conforma bug causing tasks with
+        no results to incorrectly parsed and hence dropped by Conforma in
+        SLSA v1 attestations. The value is ignored, we just need there to
+        be any result present.
+      type: string
     - name: PREFETCH_ARTIFACT
       description: The Trusted Artifact URI pointing to the artifact with
         the prefetched dependencies.
@@ -262,6 +268,19 @@ spec:
           operator: notin
           values:
             - ""
+    - name: emit-dummy-result
+      image: quay.io/konflux-ci/hermeto:0.63.0@sha256:cad54694e0b9ebcbb65eac5f3943154518ab60876a5df41317b5f399df484006
+      script: |
+        #!/bin/bash
+        # Always emit a dummy result so the task has at least one result present.
+        # The value is ignored; see the DUMMY result declaration above for details.
+        echo -n "ignored" | tee "$(results.DUMMY.path)"
+      computeResources:
+        limits:
+          memory: 64Mi
+        requests:
+          cpu: 50m
+          memory: 64Mi
     - name: create-trusted-artifact
       image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:7b4f5bbf8b8aa663beaf18bfef4fd16ba1cb5ce846d1fc776a64b312c52ee28c
       args:
