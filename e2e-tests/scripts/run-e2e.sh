@@ -56,6 +56,10 @@ trap post_actions EXIT
 load_envs
 
 GINKGO_PROCS="${GINKGO_PROCS:-2}"
+# Ginkgo's own suite timeout defaults to 1h, which silently caps the run well
+# below the Tekton task timeout. Keep it below E2E_TIMEOUT so Ginkgo interrupts
+# the suite itself and still writes the JUnit report before the hard kill.
+GINKGO_TIMEOUT="${GINKGO_TIMEOUT:-90m}"
 
 log "INFO" "Running container-build-catalog e2e tests with label filter: build-pipeline-e2e"
 
@@ -66,6 +70,7 @@ go install github.com/onsi/ginkgo/v2/ginkgo
 timeout "$E2E_TIMEOUT" ginkgo \
     -p \
     --procs="${GINKGO_PROCS}" \
+    --timeout="${GINKGO_TIMEOUT}" \
     -v \
     --no-color \
     --output-interceptor-mode=none \
