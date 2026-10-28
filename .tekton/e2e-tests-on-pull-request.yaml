@@ -10,9 +10,10 @@ metadata:
     pipelinesascode.tekton.dev/max-keep-runs: "3"
     # Runs only if *every* file changed in the PR is under e2e-tests/ (or this
     # PipelineRun definition itself). Any unrelated file in the same PR skips it.
+    # size()>0 guard is required because all() is vacuously true on an empty list.
     pipelinesascode.tekton.dev/on-cel-expression: event == "pull_request" && target_branch
-      == "main" && files.all.exists(f, f.startsWith("e2e-tests/")) && files.all.all(f,
-      f.startsWith("e2e-tests/") || f == ".tekton/e2e-tests-on-pull-request.yaml")
+      == "main" && size(files.all) > 0 && files.all.all(f, f.startsWith("e2e-tests/")
+      || f == ".tekton/e2e-tests-on-pull-request.yaml")
   labels:
     appstudio.openshift.io/application: konflux-container-build-catalog
     pipelines.appstudio.openshift.io/type: build
