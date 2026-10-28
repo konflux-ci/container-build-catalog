@@ -186,5 +186,3 @@ The custom script resolves task bundles differently for PR pipelines and for pus
 
 [build-definitions]: https://github.com/konflux-ci/build-definitions
 [run-script]: https://konflux-ci.dev/docs/patterns/running-user-scripts-on-the-build-pipeline/
-
-# temp change
