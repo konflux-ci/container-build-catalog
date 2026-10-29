@@ -26,7 +26,10 @@ spec:
       description: "The URI of the OCI container registry to store test artifacts."
       default: "quay.io/org/rhtap-e2e-artifacts"
     - name: e2e-timeout
-      description: "Timeout value for running E2E script"
+      description: "Hard timeout for the E2E script. Backstop only; keep it above ginkgo-timeout."
+      default: "100m"
+    - name: ginkgo-timeout
+      description: "Ginkgo suite timeout. Ginkgo defaults to 1h, so this must be set explicitly for longer runs."
       default: "90m"
     - name: test-environment
       type: string
@@ -93,6 +96,8 @@ spec:
           value: /workspace/artifact-dir
         - name: E2E_TIMEOUT
           value: $(params.e2e-timeout)
+        - name: GINKGO_TIMEOUT
+          value: $(params.ginkgo-timeout)
         - name: TEST_ENVIRONMENT
           value: $(params.test-environment)
         - name: IMAGE_TAG_EXPIRATION

@@ -27,6 +27,7 @@ import (
 	"github.com/openshift/library-go/pkg/image/reference"
 	tektonpipeline "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/yaml"
@@ -481,9 +482,34 @@ func CreateIntegrationTestScenario(i *integrationClient.IntegrationController, i
 		}
 	}
 
-	err := i.KubeRest().Create(context.Background(), integrationTestScenario)
+	// The integration-service validating webhook occasionally returns a 500 when its
+	// pod restarts. Admission runs before persistence, so the object does not exist
+	// when that happens and the create is safe to retry.
+	err := retryOnTransientAdmissionError(func() error {
+		return i.KubeRest().Create(context.Background(), integrationTestScenario)
+	})
 	if err != nil {
 		return nil, err
 	}
 	return integrationTestScenario, nil
+}
+
+// retryOnTransientAdmissionError retries fn with exponential backoff while it fails
+// with an error that indicates an unavailable admission webhook. Any other error is
+// returned immediately.
+func retryOnTransientAdmissionError(fn func() error) error {
+	var lastErr error
+	for attempt := 0; attempt < 5; attempt++ {
+		lastErr = fn()
+		if lastErr == nil || apierrors.IsAlreadyExists(lastErr) {
+			return nil
+		}
+		if !apierrors.IsInternalError(lastErr) && !apierrors.IsServiceUnavailable(lastErr) && !apierrors.IsTimeout(lastErr) {
+			return lastErr
+		}
+		delay := time.Duration(1<<attempt) * time.Second
+		GinkgoWriter.Printf("transient admission error (attempt %d), retrying in %s: %v\n", attempt+1, delay, lastErr)
+		time.Sleep(delay)
+	}
+	return lastErr
 }
