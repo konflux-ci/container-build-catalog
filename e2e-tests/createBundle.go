@@ -75,7 +75,7 @@ func ParseSnapshotImages(snapshotJSON, snapshotType, componentNames, e2eBundleMo
 var updatedBundleMap map[string]string
 
 // pipelinesNameList contains names of the current build pipelines
-var pipelinesNameList = []string{"docker-build", "docker-build-oci-ta", "docker-build-oci-ta-min", "docker-build-multi-platform-oci-ta", "fbc-builder"}
+var pipelinesNameList = []string{"docker-build", "docker-build-oci-ta", "docker-build-oci-ta-min", "docker-build-multi-platform-oci-ta"}
 
 // pipelineNameVsTaskListMap map to contain pipeline name as key and its task list as value
 var pipelineNameVsTaskListMap = make(map[string][]string)
@@ -86,7 +86,6 @@ var resultPathForDockerBuild = baseResultPath + "docker-build-pipeline-bundle"
 var resultPathForDockerBuildOciTA = baseResultPath + "docker-build-oci-ta-pipeline-bundle"
 var resultPathForDockerBuildOciTAMin = baseResultPath + "docker-build-oci-ta-min-pipeline-bundle"
 var resultPathForDockerBuildMultiPlatformOciTA = baseResultPath + "docker-build-multi-platform-oci-ta-pipeline-bundle"
-var resultPathForFbcBuilder = baseResultPath + "fbc-builder-pipeline-bundle"
 
 // pipelineVsResultsMap contains pipeline name as key and related result path as value
 var pipelineVsResultsMap = map[string]string{
@@ -94,7 +93,6 @@ var pipelineVsResultsMap = map[string]string{
 	"docker-build-oci-ta":                resultPathForDockerBuildOciTA,
 	"docker-build-oci-ta-min":            resultPathForDockerBuildOciTAMin,
 	"docker-build-multi-platform-oci-ta": resultPathForDockerBuildMultiPlatformOciTA,
-	"fbc-builder":                        resultPathForFbcBuilder,
 }
 
 func main() {
@@ -208,7 +206,6 @@ func getDefaultPipelineBundleRef(pipelineName string) (string, error) {
 		"docker-build-oci-ta":                "quay.io/konflux-ci/tekton-catalog/pipeline-docker-build-oci-ta:devel",
 		"docker-build-oci-ta-min":            "quay.io/konflux-ci/tekton-catalog/pipeline-docker-build-oci-ta-min:devel",
 		"docker-build-multi-platform-oci-ta": "quay.io/konflux-ci/tekton-catalog/pipeline-docker-build-multi-platform-oci-ta:devel",
-		"fbc-builder":                        "quay.io/konflux-ci/tekton-catalog/pipeline-fbc-builder:devel",
 	}
 	if bundleRef, ok := defaultPipelineBundleMap[pipelineName]; ok {
 		return bundleRef, nil

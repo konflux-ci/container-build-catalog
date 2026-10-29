@@ -43,8 +43,6 @@ Scenarios that are not included currently in the regular test runs. Blocked due 
 
 - `multiarch-oci` - Multi-architecture build with OCI media type
 - `multiarch-docker` - Multi-architecture build with Docker media type
-- `fbc` - File-Based Catalog (FBC) builder pipeline
-
 
 ## Scenario Selection Logic
 

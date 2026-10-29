@@ -151,8 +151,6 @@ spec:
             value: ""
           - name: docker-build-multi-platform-oci-ta-pipeline-bundle
             value: ""
-          - name: fbc-builder-pipeline-bundle
-            value: ""
     finally:
       - name: store-pipeline-status
         taskRef:

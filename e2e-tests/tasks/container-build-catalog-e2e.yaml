@@ -51,9 +51,6 @@ spec:
     - name: docker-build-multi-platform-oci-ta-pipeline-bundle
       type: string
       description: "Docker Build Multp Platform OCI TA Pipeline Bundle Reference"
-    - name: fbc-builder-pipeline-bundle
-      type: string
-      description: "FBC Builder Pipeline Bundle Reference"
   volumes:
     - name: konflux-ci-secrets-volume
       secret:
@@ -112,8 +109,6 @@ spec:
           value: $(params.docker-build-oci-ta-min-pipeline-bundle)
         - name: CUSTOM_DOCKER_BUILD_OCI_MULTI_PLATFORM_TA_PIPELINE_BUNDLE
           value: $(params.docker-build-multi-platform-oci-ta-pipeline-bundle)
-        - name: CUSTOM_FBC_BUILDER_PIPELINE_BUNDLE
-          value: $(params.fbc-builder-pipeline-bundle)
       onError: continue
       script: |
         #!/bin/bash
