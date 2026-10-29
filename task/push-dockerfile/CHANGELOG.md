@@ -11,6 +11,14 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.3.2
+
+### Changed
+
+- Version bump in lockstep with `push-dockerfile-oci-ta` 0.3.2 (oci-ta
+  `use-trusted-artifact` computeResources). No functional change in this base
+  task; ta-generator copies `app.kubernetes.io/version` from the base recipe.
+
 ## 0.3.1
 
 ### Fixed
