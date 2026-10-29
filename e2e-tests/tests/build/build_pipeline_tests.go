@@ -145,7 +145,7 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 				}
 			})
 			It("should push Dockerfile to registry", func() {
-				if scenario.Name == "sample-python-basic-symlink" || scenario.PipelineBundleName == constants.DockerBuildOciTAMin || scenario.PipelineBundleName == constants.FbcBuilder {
+				if scenario.Name == "sample-python-basic-symlink" || scenario.PipelineBundleName == constants.DockerBuildOciTAMin {
 					Skip("Skipping push Dockerfile to registry validation, it is not applicable here")
 					return
 				}
@@ -156,7 +156,7 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 					Skip("Skipping tekton task results validation, not applicable")
 					return
 				}
-				Expect(build.ValidateBuildPipelineTestResults(buildPipelineRun, f.AsKubeAdmin.CommonController.KubeRest(), scenario.PipelineBundleName == constants.FbcBuilder, scenario.PipelineBundleName == constants.DockerBuildOciTAMin)).To(Succeed())
+				Expect(build.ValidateBuildPipelineTestResults(buildPipelineRun, f.AsKubeAdmin.CommonController.KubeRest(), false, scenario.PipelineBundleName == constants.DockerBuildOciTAMin)).To(Succeed())
 			})
 			It("floating tags are created successfully", func() {
 				if !scenario.CheckAdditionalTags {
@@ -181,7 +181,7 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 					builtImage := build.GetBinaryImage(buildPipelineRun)
 					switch scenario.ManifestMediaType {
 					case "docker":
-						if scenario.PipelineBundleName == constants.FbcBuilder || scenario.PipelineBundleName == constants.DockerBuildMultiPlatformOciTa {
+						if scenario.PipelineBundleName == constants.DockerBuildMultiPlatformOciTa {
 							// Check for docker.manifest.list mediaType
 							Expect(build.GetBuiltImageManifestMediaType(builtImage)).Should(Equal(build.MediaTypeDockerManifestList), "mediaType of the image manifest is not of type docker.manifest.list")
 						} else {
@@ -189,7 +189,7 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 							Expect(build.GetBuiltImageManifestMediaType(builtImage)).Should(Equal(build.MediaTypeDockerManifest), "mediaType of the image manifest is not of type docker.manifest")
 						}
 					case "oci":
-						if scenario.PipelineBundleName == constants.FbcBuilder || scenario.PipelineBundleName == constants.DockerBuildMultiPlatformOciTa {
+						if scenario.PipelineBundleName == constants.DockerBuildMultiPlatformOciTa {
 							// Check for oci image index mediaType
 							Expect(build.GetBuiltImageManifestMediaType(builtImage)).Should(Equal(build.MediaTypeOciImageIndex), "mediaType of the image manifest is not of type oci.image.index")
 						} else {
@@ -255,7 +255,7 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 				Expect(hasHermetoPackages).To(BeTrue(), "no hermeto packages found")
 			})
 			It("check for source images if enabled in pipeline", func() {
-				if scenario.PipelineBundleName == constants.FbcBuilder || scenario.PipelineBundleName == constants.DockerBuildOciTAMin {
+				if scenario.PipelineBundleName == constants.DockerBuildOciTAMin {
 					Skip(fmt.Sprintf("Not applicable, skiping source image validation for the scenario %s", scenarioName))
 					return
 				}

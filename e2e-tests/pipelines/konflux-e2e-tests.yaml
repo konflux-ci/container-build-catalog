@@ -212,8 +212,6 @@ spec:
           value: $(tasks.create-test-pipeline-bundle.results.docker-build-oci-ta-min-pipeline-bundle)
         - name: docker-build-multi-platform-oci-ta-pipeline-bundle
           value: $(tasks.create-test-pipeline-bundle.results.docker-build-multi-platform-oci-ta-pipeline-bundle)
-        - name: fbc-builder-pipeline-bundle
-          value: $(tasks.create-test-pipeline-bundle.results.fbc-builder-pipeline-bundle)
   finally:
     - name: store-pipeline-status
       when:
