@@ -45,8 +45,6 @@ spec:
       description: "Docker Build OCI TA Min Pipeline Bundle Reference"
     - name: docker-build-multi-platform-oci-ta-pipeline-bundle
       description: "Docker Build Multi Platform OCI TA Pipeline Bundle Reference"
-    - name: fbc-builder-pipeline-bundle
-      description: "Fbc Builder Build Pipeline Bundle Reference"
   steps:
     - name: create-bundle
       image: registry.access.redhat.com/ubi10/go-toolset:1.26.7@sha256:4240036fd19bdad5d72ad15062d80b71cac9bc6b7789a45e53d6cc3e43167165
