@@ -9,6 +9,16 @@ When you make changes without bumping the version right away, document them here
 If that's not something you ever plan to do, consider removing this section.
 -->
 
+*Nothing yet.*
+
+## 0.2.6
+
+### Changed
+
+- Set `use-trusted-artifact` computeResources to analyzer floor values
+  (64Mi memory request=limit, 50m CPU request, no CPU limit) via recipe
+  `additionalSteps` so values survive generate-ta / check-ta.
+
 ## 0.2.5
 
 ### Changed
