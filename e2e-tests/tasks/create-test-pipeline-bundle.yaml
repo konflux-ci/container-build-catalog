@@ -5,7 +5,9 @@ metadata:
   name: create-test-pipeline-bundle
 spec:
   description: |
-    This task reads the task bundles from the SNAPSHOT and creates test pipeline bundles
+    Prepares pipeline bundle references for e2e testing. In task mode, it injects task bundles
+    from the SNAPSHOT into released pipeline bundles. In pipeline mode, it uses pipeline bundles
+    from the SNAPSHOT as-is and defaults for unchanged pipelines.
   params:
     - name: SNAPSHOT
       type: string
@@ -17,14 +19,19 @@ spec:
     - name: component-names
       type: string
       description: "comma seperated name of the components to be updated"
+    - name: e2e-bundle-mode
+      type: string
+      description: >
+        task — inject PR task bundle(s) into released pipeline bundles;
+        pipeline - use PR pipeline bundle image(s) from the snapshot as-is.
     - name: git-url
       type: string
       default: "https://github.com/konflux-ci/container-build-catalog.git"
-      description: The URL of the repository to clone
+      description: Git repository URL containing the PR source.
     - name: git-revision
       type: string
       default: main
-      description: The revision of the repository to checkout
+      description: Git revision of the PR source to use.
   volumes:
     - name: konflux-ci-secrets-volume
       secret:
@@ -63,6 +70,7 @@ spec:
         # Log params
         echo "SNAPSHOT_TYPE: $(params.snapshot-type)"
         echo "COMPONENT_NAMES: $(params.component-names)"
+        echo "E2E_BUNDLE_MODE: $(params.e2e-bundle-mode)"
         QUAY_TOKEN="$(cat "/usr/local/konflux-ci-secrets/quay-token")"
         export QUAY_TOKEN
 
@@ -85,4 +93,4 @@ spec:
 
         cd e2e-tests/
         go mod download
-        go run . "${SNAPSHOT}" "$(params.snapshot-type)" "$(params.component-names)"
+        go run . "${SNAPSHOT}" "$(params.snapshot-type)" "$(params.component-names)" "$(params.e2e-bundle-mode)"

@@ -2,6 +2,22 @@
 
 This document explains the test scenarios defined in `tests/build/scenarios.go` and how scenarios are grouped and their selection logic.
 
+## Task and Pipeline Bundle Modes
+
+- **Task mode** tests changed task bundles by injecting them into released pipeline bundles.
+- **Pipeline mode** tests changed pipeline bundles from the Snapshot as-is; unchanged pipeline flavors use their default `:devel` bundles.
+- If a change includes both tasks and pipelines, run two independent integration tests (ITs): task mode with the changed task injected into released pipelines, and pipeline mode with the new pipeline bundle as-is.
+
+See the [pipeline bundle management design](../docs/design/pipeline-bundle-management.md) for the rationale and details.
+
+When running `konflux-e2e-tests` from a fork or feature branch, set IntegrationTestScenario pipeline parameters `catalog-git-url` and `catalog-git-revision` to the same values as the scenario git resolver (Tekton cannot use `prepare-e2e` results in git task resolvers).
+
+For **group** integration tests, set pipeline parameter `e2e-bundle-mode` to `task` or `pipeline` on the scenario (task application group vs pipeline application group). Component tests infer mode from the component name. If a group PR changes both task and pipeline catalog directories, `e2e-bundle-mode` is required on the scenario.
+
+## createBundle unit tests
+
+PRs that change `createBundle.go`, `createBundle_test.go`, or `.github/workflows/e2e-createbundle-unit-tests.yaml` run `go test` in this directory via the **createBundle unit tests** workflow.
+
 ## Scenario Groups
 
 Scenarios are organized into the following groups:
