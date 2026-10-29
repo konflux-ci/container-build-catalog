@@ -48,7 +48,7 @@ func GenerateDockerBuildOciTa(dockerBuild tektonapi.Pipeline, existing *tektonap
 		"quay.io/konflux-ci/tekton-catalog/task-buildah-oci-ta:0.10.5@sha256:5fcf620537b0dece56a9c9a8090ce7592a874da92cc2a5d398abdc2382eb8a3c",
 	)
 	p.AddTaskParam("build-container", "SOURCE_ARTIFACT", StringValue("$(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)"))
-	p.AddTaskParam("build-container", "CACHI2_ARTIFACT", StringValue("$(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)"))
+	p.AddTaskParam("build-container", "PREFETCH_ARTIFACT", StringValue("$(tasks.prefetch-dependencies.results.PREFETCH_ARTIFACT)"))
 
 	p.SetTaskRef(
 		"build-source-image",
@@ -56,7 +56,7 @@ func GenerateDockerBuildOciTa(dockerBuild tektonapi.Pipeline, existing *tektonap
 		"quay.io/konflux-ci/tekton-catalog/task-source-build-oci-ta:0.3@sha256:7c5575ac8e292f27f57716c021ab0324460dc958e73946724c588c5228e5f372",
 	)
 	p.AddTaskParam("build-source-image", "SOURCE_ARTIFACT", StringValue("$(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)"))
-	p.AddTaskParam("build-source-image", "CACHI2_ARTIFACT", StringValue("$(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)"))
+	p.AddTaskParam("build-source-image", "PREFETCH_ARTIFACT", StringValue("$(tasks.prefetch-dependencies.results.PREFETCH_ARTIFACT)"))
 
 	p.SetTaskRef(
 		"sast-snyk-check",
@@ -64,7 +64,6 @@ func GenerateDockerBuildOciTa(dockerBuild tektonapi.Pipeline, existing *tektonap
 		"quay.io/konflux-ci/tekton-catalog/task-sast-snyk-check-oci-ta:0.5@sha256:eba24f5d9f4b18aa71e523b9b3dbcf22982aa4b018824260a090b19dfc9abf6f",
 	)
 	p.AddTaskParam("sast-snyk-check", "SOURCE_ARTIFACT", StringValue("$(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)"))
-	p.AddTaskParam("sast-snyk-check", "CACHI2_ARTIFACT", StringValue("$(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)"))
 
 	p.SetTaskRef(
 		"sast-shell-check",
@@ -72,7 +71,6 @@ func GenerateDockerBuildOciTa(dockerBuild tektonapi.Pipeline, existing *tektonap
 		"quay.io/konflux-ci/tekton-catalog/task-sast-shell-check-oci-ta:0.1@sha256:61b27e6ad5daba761d41bb37efb790ed98380603fd4fe2f86d156def5bd72ecc",
 	)
 	p.AddTaskParam("sast-shell-check", "SOURCE_ARTIFACT", StringValue("$(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)"))
-	p.AddTaskParam("sast-shell-check", "CACHI2_ARTIFACT", StringValue("$(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)"))
 
 	p.SetTaskRef(
 		"sast-unicode-check",
@@ -80,7 +78,6 @@ func GenerateDockerBuildOciTa(dockerBuild tektonapi.Pipeline, existing *tektonap
 		"quay.io/konflux-ci/tekton-catalog/task-sast-unicode-check-oci-ta:0.4@sha256:eb9d5392f215cb8b52b16382098cac4885b1e6cd989f88ebd83fdb234d283eb9",
 	)
 	p.AddTaskParam("sast-unicode-check", "SOURCE_ARTIFACT", StringValue("$(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)"))
-	p.AddTaskParam("sast-unicode-check", "CACHI2_ARTIFACT", StringValue("$(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)"))
 
 	p.SetTaskRef(
 		"push-dockerfile",

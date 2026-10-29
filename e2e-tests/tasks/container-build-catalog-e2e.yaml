@@ -54,6 +54,12 @@ spec:
     - name: fbc-builder-pipeline-bundle
       type: string
       description: "FBC Builder Pipeline Bundle Reference"
+    - name: tekton-bundle-builder-pipeline-bundle
+      type: string
+      description: "Tekton Bundle Builder Pipeline Bundle Reference"
+    - name: tekton-bundle-builder-oci-ta-pipeline-bundle
+      type: string
+      description: "Tekton Bundle Builder OCI TA Pipeline Bundle Reference"
   volumes:
     - name: konflux-ci-secrets-volume
       secret:
@@ -114,6 +120,10 @@ spec:
           value: $(params.docker-build-multi-platform-oci-ta-pipeline-bundle)
         - name: CUSTOM_FBC_BUILDER_PIPELINE_BUNDLE
           value: $(params.fbc-builder-pipeline-bundle)
+        - name: CUSTOM_TEKTON_BUNDLE_BUILDER_PIPELINE_BUNDLE
+          value: $(params.tekton-bundle-builder-pipeline-bundle)
+        - name: CUSTOM_TEKTON_BUNDLE_BUILDER_OCI_TA_PIPELINE_BUNDLE
+          value: $(params.tekton-bundle-builder-oci-ta-pipeline-bundle)
       onError: continue
       script: |
         #!/bin/bash

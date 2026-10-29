@@ -153,6 +153,10 @@ spec:
             value: ""
           - name: fbc-builder-pipeline-bundle
             value: ""
+          - name: tekton-bundle-builder-pipeline-bundle
+            value: ""
+          - name: tekton-bundle-builder-oci-ta-pipeline-bundle
+            value: ""
     finally:
       - name: store-pipeline-status
         taskRef:
