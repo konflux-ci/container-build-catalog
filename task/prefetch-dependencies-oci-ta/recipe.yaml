@@ -1,10 +1,30 @@
 ---
+# Note: use-/create-trusted-artifact are additionalSteps (not recipe `add:`)
+# so computeResources survive `hack/generate-ta-tasks.sh` / check-ta CI
+# (ta-generator@v1.1.0 hardcodes create at 3Gi and leaves use unset).
+# Keep PREFETCH_* naming from the cachi2→hermeto cleanup; `add: []` avoids
+# duplicating the generator's use/create steps when we own them here.
 base: ../prefetch-dependencies/prefetch-dependencies.yaml
-add:
-  - use-source
-  - create-source
-  - create-prefetch
+add: []
 newPrefetchNaming: true
+addParams:
+  - name: SOURCE_ARTIFACT
+    type: string
+    description: The Trusted Artifact URI pointing to the artifact with the application source code.
+  - name: ociStorage
+    type: string
+    description: The OCI repository where the Trusted Artifacts are stored.
+  - name: ociArtifactExpiresAfter
+    type: string
+    description: Expiration date for the trusted artifacts created in the OCI repository. An empty string means the artifacts do not expire.
+    default: ""
+addResult:
+  - name: SOURCE_ARTIFACT
+    type: string
+    description: The Trusted Artifact URI pointing to the artifact with the application source code.
+  - name: PREFETCH_ARTIFACT
+    type: string
+    description: The Trusted Artifact URI pointing to the artifact with the prefetched dependencies.
 additionalSteps:
   - at: 0
     name: skip-ta
@@ -27,6 +47,46 @@ additionalSteps:
 
       echo -n "${SOURCE_ARTIFACT}" > "$(results.SOURCE_ARTIFACT.path)"
       echo -n "" > "$(results.PREFETCH_ARTIFACT.path)"
+  - at: 1
+    name: use-trusted-artifact
+    image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:7b4f5bbf8b8aa663beaf18bfef4fd16ba1cb5ce846d1fc776a64b312c52ee28c
+    args:
+      - use
+      - $(params.SOURCE_ARTIFACT)=/var/workdir/source
+    volumeMounts:
+      - mountPath: /etc/pki/tls/certs/ca-custom-bundle.crt
+        name: trusted-ca
+        readOnly: true
+        subPath: ca-bundle.crt
+    computeResources:
+      limits:
+        memory: 4Gi
+      requests:
+        cpu: 50m
+        memory: 4Gi
+  - at: 3
+    name: create-trusted-artifact
+    image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:7b4f5bbf8b8aa663beaf18bfef4fd16ba1cb5ce846d1fc776a64b312c52ee28c
+    args:
+      - create
+      - --store
+      - $(params.ociStorage)
+      - $(results.SOURCE_ARTIFACT.path)=/var/workdir/source
+      - $(results.PREFETCH_ARTIFACT.path)=/var/workdir/prefetch
+    volumeMounts:
+      - mountPath: /etc/pki/tls/certs/ca-custom-bundle.crt
+        name: trusted-ca
+        readOnly: true
+        subPath: ca-bundle.crt
+    env:
+      - name: IMAGE_EXPIRES_AFTER
+        value: $(params.ociArtifactExpiresAfter)
+    computeResources:
+      limits:
+        memory: 7Gi
+      requests:
+        cpu: 1100m
+        memory: 7Gi
 stepWhen:
   use-trusted-artifact:
     - input: $(params.input)
