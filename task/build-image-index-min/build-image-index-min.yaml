@@ -6,7 +6,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: image-build, konflux
   labels:
-    app.kubernetes.io/version: "0.4"
+    app.kubernetes.io/version: 0.4.1
   name: build-image-index-min
 spec:
   description: This takes existing Image Manifests and combines them in an Image Index.
@@ -158,7 +158,7 @@ spec:
       requests:
         cpu: 100m
         memory: 256Mi
-    image: quay.io/konflux-ci/mobster:1.2.1-1782136886@sha256:1374bc35c71781987cce00ef5efe2be42923f83def19b60a570e947189b90d15
+    image: quay.io/konflux-ci/mobster:2.4.0-1793864458@sha256:7208386ff03eeedabd7d59c100b7c6b5503caacc8af851debd0d720db66c9361
     name: create-sbom
     script: |
       #!/bin/bash
