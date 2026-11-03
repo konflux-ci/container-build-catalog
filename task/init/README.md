@@ -15,3 +15,5 @@ Initialize Pipeline Task, enables configuration for cache-proxy if required duri
 
 
 ## Additional info
+
+Catalog group integration tests exercise changed task bundles when files under `task/init/` change in a PR.
