@@ -133,9 +133,9 @@ spec:
           value: >-
             '[{\"containerPort\":30012,\"hostPort\":8180,\"protocol\":\"TCP\"}]'
         - name: cpus
-          value: 96
+          value: 64
         - name: memory
-          value: 256
+          value: 128
         - name: spot
           value: 'false'
         - name: harden-control-plane
