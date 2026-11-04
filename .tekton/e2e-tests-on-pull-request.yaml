@@ -89,7 +89,7 @@ spec:
           - name: cpus
             value: 96
           - name: memory
-            value: 256
+            value: 384
           - name: spot
             value: 'false'
           - name: harden-control-plane
