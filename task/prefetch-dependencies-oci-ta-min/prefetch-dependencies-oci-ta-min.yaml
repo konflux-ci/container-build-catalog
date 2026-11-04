@@ -77,6 +77,11 @@ spec:
     description: 'Select the SBOM format to generate. Valid values: spdx, cyclonedx.'
     name: sbom-type
   results:
+  - description: Temporary workaround for a Conforma bug causing tasks with no results
+      to incorrectly parsed and hence dropped by Conforma in SLSA v1 attestations.
+      The value is ignored, we just need there to be any result present.
+    name: DUMMY
+    type: string
   - description: The Trusted Artifact URI pointing to the artifact with the prefetched
       dependencies.
     name: PREFETCH_ARTIFACT
@@ -223,6 +228,19 @@ spec:
       operator: notin
       values:
       - ""
+  - computeResources:
+      limits:
+        memory: 64Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    image: quay.io/konflux-ci/hermeto:0.63.0@sha256:cad54694e0b9ebcbb65eac5f3943154518ab60876a5df41317b5f399df484006
+    name: emit-dummy-result
+    script: |
+      #!/bin/bash
+      # Always emit a dummy result so the task has at least one result present.
+      # The value is ignored; see the DUMMY result declaration above for details.
+      echo -n "ignored" | tee "$(results.DUMMY.path)"
   - args:
     - create
     - --store
