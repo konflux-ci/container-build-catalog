@@ -84,7 +84,7 @@ func GenerateDockerBuildMin(dockerBuildOciTa tektonapi.Pipeline, existing *tekto
 	p.RemoveTask("apply-tags")
 	p.RemoveTask("sast-snyk-check")
 	p.RemoveTask("ecosystem-cert-preflight-checks")
-	p.RemoveTask("clair-scan")
+	p.RemoveTask("roxctl-scan")
 	p.RemoveTask("build-source-image")
 
 	// build-source-image param is only used by the removed build-source-image task.

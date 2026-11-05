@@ -31,9 +31,9 @@ func GenerateDockerBuildMultiPlatform(dockerBuildOciTa tektonapi.Pipeline, exist
 	p.SetTaskRunAfter("build-image-index", []string{"build-images"})
 
 	// Fan the per-platform scans out over the same platforms.
-	p.AddTaskMatrixParam("clamav-scan", "image-arch", ArrayValue("$(params.build-platforms)"))
+	p.AddTaskMatrixParam("roxctl-scan", "image-platform", ArrayValue("$(params.build-platforms)"))
 	p.AddTaskMatrixParam("ecosystem-cert-preflight-checks", "platform", ArrayValue("$(params.build-platforms)"))
-	p.AddTaskMatrixParam("clair-scan", "image-platform", ArrayValue("$(params.build-platforms)"))
+	p.AddTaskMatrixParam("clamav-scan", "image-arch", ArrayValue("$(params.build-platforms)"))
 
 	// Always build the image index by default.
 	p.SetParamDefault("build-image-index", "true")
