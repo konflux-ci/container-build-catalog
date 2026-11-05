@@ -124,10 +124,13 @@ spec:
         taskRef:
           resolver: git
           params:
+            # TODO: REVERT BACK TO
+            #   url: https://github.com/konflux-ci/container-build-catalog.git
+            #   revision: main
             - name: url
-              value: https://github.com/konflux-ci/container-build-catalog.git
+              value: https://github.com/slimreaper35/container-build-catalog.git
             - name: revision
-              value: main
+              value: fbc
             - name: pathInRepo
               value: e2e-tests/tasks/container-build-catalog-e2e.yaml
         params:
