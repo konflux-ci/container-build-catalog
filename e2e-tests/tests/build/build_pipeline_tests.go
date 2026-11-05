@@ -72,6 +72,11 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 					integrationTestScenario, err = CreateIntegrationTestScenario(f.AsKubeAdmin.IntegrationController, "", applicationName, testNamespace, itsGitURL, itsGitRevision, itsPipelinePathInRepo, []string{"application"}, ecPolicyName)
 					Expect(err).ShouldNot(HaveOccurred())
 				}
+				// Create Redhat Registry Secret and link it to the component service account
+				err = CreateRedhatRegistrySecret(f, "registry-redhat-io-secret")
+				Expect(err).ShouldNot(HaveOccurred(), "failed to create secret for registry.redhat.io")
+				err = f.AsKubeAdmin.CommonController.LinkSecretToServiceAccount(testNamespace, "registry-redhat-io-secret", "build-pipeline-"+componentName, true)
+				Expect(err).ShouldNot(HaveOccurred(), "failed to link secret to serviceAccount")
 			})
 
 			AfterAll(func() {
