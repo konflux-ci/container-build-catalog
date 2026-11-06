@@ -5,9 +5,6 @@ exceptions:
   - path: task/prefetch-dependencies-oci-ta/prefetch-dependencies-oci-ta.yaml
     steps:
       - use-trusted-artifact
-  - path: task/push-dockerfile-oci-ta/push-dockerfile-oci-ta.yaml
-    steps:
-      - use-trusted-artifact
   - path: task/source-build-oci-ta/source-build-oci-ta.yaml
     steps:
       - use-trusted-artifact
