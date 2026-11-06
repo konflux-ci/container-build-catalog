@@ -11,6 +11,14 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.4.1
+
+### Changed
+
+- Version bump in lockstep with `source-build-oci-ta` 0.4.1 (`use-trusted-artifact`
+  computeResources). No functional change in this base task; ta-generator copies
+  `app.kubernetes.io/version` from the base recipe.
+
 ## 0.4.0
 
 ### Changed

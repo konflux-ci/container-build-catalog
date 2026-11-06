@@ -11,6 +11,15 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.4.1
+
+### Changed
+
+- Set `use-trusted-artifact` computeResources to analyzer P95+5% (256Mi memory
+  req=lim, 250m CPU request, no limits.cpu) via recipe `additionalSteps` so
+  values survive generate-ta / check-ta. Left `get-base-images` and `build` at
+  their existing defaults.
+
 ## 0.4.0
 
 ### Changed
