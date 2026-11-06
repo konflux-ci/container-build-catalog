@@ -11,6 +11,12 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.4.1
+
+### Changed
+
+- Mobster version bumped from 1.2.1 to 2.4.0.
+
 ## 0.4
 
 ### Added
