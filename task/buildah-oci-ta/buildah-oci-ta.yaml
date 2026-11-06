@@ -544,12 +544,13 @@ spec:
           # Copy to a sibling dir instead in case we don't have write permissions to the prefetch_dir.
           # It's still on the same filesystem, so copying via reflinks should be possible.
           prefetch_dir_copy="/var/workdir/prefetch-copy"
-          # Save the build machine's architecture to pass to Mobster later
-          uname -m >/shared/prefetch-arch
         else
           prefetch_dir=""
           prefetch_dir_copy=""
         fi
+
+        # Save the build machine's architecture to pass to Mobster later.
+        uname -m >/shared/arch
 
         yum_repos_d_sources=()
         if [ -d "${YUM_REPOS_D_FETCHED}" ]; then
@@ -774,9 +775,7 @@ spec:
           mobster_args+=(--contextualize)
         fi
 
-        if [ -f "/shared/prefetch-arch" ]; then
-          mobster_args+=(--arch "$(cat /shared/prefetch-arch)")
-        fi
+        mobster_args+=(--arch "$(cat /shared/arch)")
 
         mobster "${mobster_args[@]}"
 
