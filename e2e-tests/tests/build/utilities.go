@@ -195,6 +195,29 @@ func CreateGitlabBuildSecret(f *framework.Framework, secretName string, annotati
 	return nil
 }
 
+// CreateRedhatRegistrySecret creates a Kubernetes secret for pulling images from registry.redhat.io
+func CreateRedhatRegistrySecret(f *framework.Framework, secretName string) error {
+	registryToken := utils.GetEnv("REGISTRY_REDHAT_IO_TOKEN", "")
+	if registryToken == "" {
+		return fmt.Errorf("registry redhat io token env is empty, must be set")
+	}
+	secret := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: f.UserNamespace,
+		},
+		Type: "kubernetes.io/dockerconfigjson",
+		StringData: map[string]string{
+			".dockerconfigjson": registryToken,
+		},
+	}
+	_, err := f.AsKubeAdmin.CommonController.CreateSecret(f.UserNamespace, &secret)
+	if err != nil {
+		return fmt.Errorf("error creating build secret: %v", err)
+	}
+	return nil
+}
+
 // GetPipelineRunPodLogs returns all the pod logs for a specific pipelineRun in a namespace as a single string
 func GetPipelineRunPodLogs(s *common.SuiteController, pipelineRunName, namespace string) (string, error) {
 	var allPodLogs string
