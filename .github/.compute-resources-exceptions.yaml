@@ -11,6 +11,3 @@ exceptions:
   - path: task/source-build-oci-ta/source-build-oci-ta.yaml
     steps:
       - use-trusted-artifact
-  - path: task/tkn-bundle-oci-ta/tkn-bundle-oci-ta.yaml
-    steps:
-      - use-trusted-artifact

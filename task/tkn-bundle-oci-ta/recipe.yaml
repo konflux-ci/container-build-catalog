@@ -1,7 +1,7 @@
 ---
+# Note: use-trusted-artifact is an additionalStep (not recipe `add:`) so
+# computeResources survive `hack/generate-ta-tasks.sh` / check-ta CI.
 base: ../tkn-bundle/tkn-bundle.yaml
-add:
-  - use-source
 removeWorkspaces:
   - source
 preferStepTemplate: true
@@ -9,3 +9,20 @@ replacements:
   workspaces.source.path: /var/workdir
 regexReplacements:
   "/workspace(/.*)": /var/workdir$1
+addParams:
+  - name: SOURCE_ARTIFACT
+    type: string
+    description: The Trusted Artifact URI pointing to the artifact with the application source code.
+additionalSteps:
+  - at: 0
+    name: use-trusted-artifact
+    image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:27ddb820f0d30609dcb8de88219309edbced429896324e474f494470c2f003fb
+    args:
+      - use
+      - $(params.SOURCE_ARTIFACT)=/var/workdir/source
+    computeResources:
+      limits:
+        memory: 64Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
