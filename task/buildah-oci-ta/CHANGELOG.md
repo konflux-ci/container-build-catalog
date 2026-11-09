@@ -4,13 +4,16 @@
 
 ## Unreleased
 
-- Add generator default use-TA computeResources (3Gi/50m) via ta-generator@v1.2.0.
 <!--
 When you make changes without bumping the version right away, document them here.
 If that's not something you ever plan to do, consider removing this section.
 -->
 
-*Nothing yet.*
+## 0.14.2
+
+### Changed
+
+- Add generator default `use-trusted-artifact` computeResources (`3Gi`/`50m`) via `ta-generator@v1.2.0`.
 
 ## 0.14.1
 

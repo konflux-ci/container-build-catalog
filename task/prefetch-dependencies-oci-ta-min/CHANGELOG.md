@@ -9,14 +9,16 @@ Use a minor task version bump only when it provides a significant user-facing up
 
 ## Unreleased
 
-- Propagate use-TA 3Gi/50m from prefetch-dependencies-oci-ta after ta-generator@v1.2.0.
-
 <!--
 When you make changes without bumping the version right away, document them here.
 If that's not something you ever plan to do, consider removing this section.
 -->
 
-*Nothing yet.*
+## 0.11.1
+
+### Changed
+
+- Align min shrink with KONFLUX-14361: `use-trusted-artifact` floors `64Mi`/`50m`; keep prefetch/create at `256Mi`/`100m`; drop inherited `limits.cpu`.
 
 ## 0.11.1
 

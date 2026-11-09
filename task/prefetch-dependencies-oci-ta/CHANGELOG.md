@@ -9,13 +9,19 @@ Use a minor task version bump only when it provides a significant user-facing up
 
 ## Unreleased
 
-- Add use-TA 3Gi/50m and lower create-TA CPU 1 → 50m via ta-generator@v1.2.0.
 <!--
 When you make changes without bumping the version right away, document them here.
 If that's not something you ever plan to do, consider removing this section.
 -->
 
-*Nothing yet.*
+## 0.11.1
+
+### Changed
+
+- Bump pin to `ta-generator@v1.2.0` and right-size TA/prefetch resources (KONFLUX-14361 / KONFLUX-16476).
+- `use-trusted-artifact`: `3Gi`/`50m` (owned via recipe `additionalSteps` so generate-ta/check-ta keep them).
+- `create-trusted-artifact`: `7Gi`/`1100m` (req=lim, no `limits.cpu`).
+- `prefetch-dependencies`: `6Gi`/`1950m` (inherits from base).
 
 ## 0.11.1
 

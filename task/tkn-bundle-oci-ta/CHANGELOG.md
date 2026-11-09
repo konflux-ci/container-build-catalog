@@ -4,11 +4,16 @@
 
 ## Unreleased
 
-- Add generator default use-TA computeResources (3Gi/50m) via ta-generator@v1.2.0.
 <!--
 When you make changes without bumping the version right away, document them here.
 If that's not something you ever plan to do, consider removing this section.
 -->
+
+## 0.2.6
+
+### Changed
+
+- Override `use-trusted-artifact` to analyzer floor `64Mi`/`50m` via recipe `additionalSteps` (below `ta-generator@v1.2.0` default `3Gi`) (KONFLUX-16161).
 
 ## 0.2.5
 
