@@ -1,4 +1,1 @@
-exceptions:
-  - path: task/prefetch-dependencies-oci-ta-min/prefetch-dependencies-oci-ta-min.yaml
-    steps:
-      - use-trusted-artifact
+exceptions: []
