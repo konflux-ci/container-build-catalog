@@ -4,12 +4,16 @@
 
 ## Unreleased
 
-- No functional change; companion oci-ta sets `use-trusted-artifact` computeResources (floor override).
-
 <!--
 When you make changes without bumping the version right away, document them here.
 If that's not something you ever plan to do, consider removing this section.
 -->
+
+## 0.2.6
+
+### Changed
+
+- No functional change; companion oci-ta sets use-TA computeResources to floor `64Mi`/`50m` (KONFLUX-16161).
 
 ## 0.2.5
 
