@@ -2,7 +2,16 @@
 
 ## Unreleased
 
-- Lower create-trusted-artifact CPU request 1 → 50m via ta-generator@v1.2.0.
+<!--
+When you make changes without bumping the version right away, document them here.
+If that's not something you ever plan to do, consider removing this section.
+-->
+
+## 0.2.7
+
+### Changed
+
+- Lower `create-trusted-artifact` CPU request `1` → `50m` via `ta-generator@v1.2.0`.
 
 ## 0.2.6
 
