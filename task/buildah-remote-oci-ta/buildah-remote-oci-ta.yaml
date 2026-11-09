@@ -274,6 +274,48 @@ spec:
     name: IMAGE_APPEND_PLATFORM
     type: string
   results:
+  - description: Digest-qualified references of base images used for the build.
+    name: BASE_IMAGES_DIGESTS
+  - description: Base image 1 for Tekton Chains provenance.
+    name: BASE_IMAGE_1_ARTIFACT_INPUTS
+    properties:
+      digest:
+        type: string
+      uri:
+        type: string
+    type: object
+  - description: Base image 2 for Tekton Chains provenance.
+    name: BASE_IMAGE_2_ARTIFACT_INPUTS
+    properties:
+      digest:
+        type: string
+      uri:
+        type: string
+    type: object
+  - description: Base image 3 for Tekton Chains provenance.
+    name: BASE_IMAGE_3_ARTIFACT_INPUTS
+    properties:
+      digest:
+        type: string
+      uri:
+        type: string
+    type: object
+  - description: Base image 4 for Tekton Chains provenance.
+    name: BASE_IMAGE_4_ARTIFACT_INPUTS
+    properties:
+      digest:
+        type: string
+      uri:
+        type: string
+    type: object
+  - description: Base image 5 for Tekton Chains provenance.
+    name: BASE_IMAGE_5_ARTIFACT_INPUTS
+    properties:
+      digest:
+        type: string
+      uri:
+        type: string
+    type: object
   - description: Digest of the image just built
     name: IMAGE_DIGEST
   - description: Image reference of the built image
@@ -678,6 +720,7 @@ spec:
         "${sbom_args[@]}"
         --containerfile-json-output /shared/parsed_dockerfile.json
         --resolved-base-images-output /shared/base_images_digests
+        --resolved-base-images-json-output /shared/base_image_artifacts.json
         --no-cache
         --ulimits nofile=4096:4096
         --src-tls-verify="$TLSVERIFY"
@@ -689,6 +732,41 @@ spec:
       echo "[$(date --utc -Ins)] $(printf '%q ' "${cmd[@]}")"
 
       "${cmd[@]}" | tee /tmp/results.json
+
+      # Adapt the artifacts file to Chains object results until the deployment
+      # supports consuming /tekton/artifacts/provenance.json directly.
+      base_image_inputs=$(jq -cse '
+        if length == 1 then .[0] else error("expected one artifacts document") end
+        | .inputs | if type == "array" then . else error("invalid artifact inputs") end
+        | map(select(.name == "base-images"))
+        | if length == 1 then .[0] else error("expected one base-images group") end
+        | if has("values") then .values else [] end
+        | if type == "array" then . else error("invalid base image values") end
+        | if all(.[]; (.uri | startswith("oci://")) and
+            (.digest.sha256 | test("^[a-f0-9]{64}$"))) then .
+          else error("invalid base image artifact") end
+        | map({uri, digest: ("sha256:" + .digest.sha256)})
+        | unique_by(.uri, .digest)
+        | if length <= 5 then . else error("more than five distinct base images") end
+      ' /shared/base_image_artifacts.json)
+      base_image_results=(
+        "$(results.BASE_IMAGE_1_ARTIFACT_INPUTS.path)"
+        "$(results.BASE_IMAGE_2_ARTIFACT_INPUTS.path)"
+        "$(results.BASE_IMAGE_3_ARTIFACT_INPUTS.path)"
+        "$(results.BASE_IMAGE_4_ARTIFACT_INPUTS.path)"
+        "$(results.BASE_IMAGE_5_ARTIFACT_INPUTS.path)"
+      )
+      base_image_count=$(jq length <<<"$base_image_inputs")
+      for i in "${!base_image_results[@]}"; do
+        if ((i < base_image_count)); then
+          jq -cj --argjson i "$i" '.[$i]' <<<"$base_image_inputs" >"${base_image_results[$i]}"
+        else
+          rm -f "${base_image_results[$i]}"
+        fi
+      done
+      jq -r '.inputs[] | select(.name == "base-images") | (.values // [])[] |
+        "\(.uri | ltrimstr("oci://"))@sha256:\(.digest.sha256)"' \
+        /shared/base_image_artifacts.json >"$(results.BASE_IMAGES_DIGESTS.path)"
 
       jq -j .image_url /tmp/results.json >"$(results.IMAGE_URL.path)"
       jq -j .digest /tmp/results.json >"$(results.IMAGE_DIGEST.path)"
