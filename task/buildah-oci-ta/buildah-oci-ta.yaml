@@ -417,6 +417,12 @@ spec:
           name: trusted-ca
           readOnly: true
           subPath: ca-bundle.crt
+      computeResources:
+        limits:
+          memory: 3Gi
+        requests:
+          cpu: 50m
+          memory: 3Gi
     - name: build
       image: quay.io/konflux-ci/konflux-build-cli@sha256:42809082a271a037f0774af81e536d9f7d03cf0236634ff44b1c5f85b7fa2216
       args:
