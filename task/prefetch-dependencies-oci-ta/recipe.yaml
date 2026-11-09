@@ -1,7 +1,7 @@
 ---
 # Note: use-/create-trusted-artifact are additionalSteps (not recipe `add:`)
 # so computeResources survive `hack/generate-ta-tasks.sh` / check-ta CI
-# (ta-generator@v1.1.0 hardcodes create at 3Gi and leaves use unset).
+# (ta-generator@v1.2.0 defaults use/create; create stays 7Gi override here).
 # Keep PREFETCH_* naming from the cachi2→hermeto cleanup; `add: []` avoids
 # duplicating the generator's use/create steps when we own them here.
 base: ../prefetch-dependencies/prefetch-dependencies.yaml
@@ -49,7 +49,7 @@ additionalSteps:
       echo -n "" > "$(results.PREFETCH_ARTIFACT.path)"
   - at: 1
     name: use-trusted-artifact
-    image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:7b4f5bbf8b8aa663beaf18bfef4fd16ba1cb5ce846d1fc776a64b312c52ee28c
+    image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:6df16e808f147926a2ba5f88588350bd8f77e73fde43614e79ddbd6e2b097d2e
     args:
       - use
       - $(params.SOURCE_ARTIFACT)=/var/workdir/source
@@ -60,13 +60,13 @@ additionalSteps:
         subPath: ca-bundle.crt
     computeResources:
       limits:
-        memory: 4Gi
+        memory: 3Gi
       requests:
         cpu: 50m
-        memory: 4Gi
+        memory: 3Gi
   - at: 3
     name: create-trusted-artifact
-    image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:7b4f5bbf8b8aa663beaf18bfef4fd16ba1cb5ce846d1fc776a64b312c52ee28c
+    image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:6df16e808f147926a2ba5f88588350bd8f77e73fde43614e79ddbd6e2b097d2e
     args:
       - create
       - --store

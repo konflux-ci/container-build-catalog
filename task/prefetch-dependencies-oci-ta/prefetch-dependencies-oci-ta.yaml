@@ -160,7 +160,6 @@ spec:
           name: trusted-ca
           readOnly: true
           subPath: ca-bundle.crt
-      # KONFLUX-14361 / ta-generator@v1.2.0 baseline
       computeResources:
         limits:
           memory: 3Gi
