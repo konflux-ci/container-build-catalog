@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+<!--
+When you make changes without bumping the version right away, document them here.
+If that's not something you ever plan to do, consider removing this section.
+-->
+
+## 0.2.7
+
+### Changed
+
+- No functional change; companion oci-ta lowers create-TA CPU request `1` → `50m` via `ta-generator@v1.2.0` (KONFLUX-16476).
+
 ## 0.2.6
 
 ### Changed
