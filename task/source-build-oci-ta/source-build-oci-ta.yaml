@@ -94,10 +94,10 @@ spec:
         - $(params.PREFETCH_ARTIFACT)=/var/workdir/prefetch
       computeResources:
         limits:
-          memory: 3Gi
+          memory: 256Mi
         requests:
-          cpu: 50m
-          memory: 3Gi
+          cpu: 250m
+          memory: 256Mi
     - name: get-base-images
       image: quay.io/konflux-ci/task-runner:1.8.1@sha256:b9ef0479b57a494368a12a02886c650314c9ac7391c6228f21065865aab71c9e
       env:
