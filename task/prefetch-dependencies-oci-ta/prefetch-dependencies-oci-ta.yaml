@@ -160,6 +160,12 @@ spec:
           name: trusted-ca
           readOnly: true
           subPath: ca-bundle.crt
+      computeResources:
+        limits:
+          memory: 3Gi
+        requests:
+          cpu: 50m
+          memory: 3Gi
       when:
         - input: $(params.input)
           operator: notin
@@ -282,7 +288,7 @@ spec:
         limits:
           memory: 3Gi
         requests:
-          cpu: "1"
+          cpu: 50m
           memory: 3Gi
       when:
         - input: $(params.input)
