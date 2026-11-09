@@ -9,6 +9,8 @@ Use a minor task version bump only when it provides a significant user-facing up
 
 ## Unreleased
 
+- Propagate use-TA 3Gi/50m from prefetch-dependencies-oci-ta after ta-generator@v1.2.0.
+
 <!--
 When you make changes without bumping the version right away, document them here.
 If that's not something you ever plan to do, consider removing this section.
