@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Lower create-trusted-artifact CPU request 1 → 50m via ta-generator@v1.2.0.
+
 ## 0.2.6
 
 ### Changed

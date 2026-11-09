@@ -9,6 +9,7 @@ Use a minor task version bump only when it provides a significant user-facing up
 
 ## Unreleased
 
+- Add use-TA 3Gi/50m and lower create-TA CPU 1 → 50m via ta-generator@v1.2.0.
 <!--
 When you make changes without bumping the version right away, document them here.
 If that's not something you ever plan to do, consider removing this section.

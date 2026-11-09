@@ -296,5 +296,5 @@ spec:
         limits:
           memory: 3Gi
         requests:
-          cpu: "1"
+          cpu: 50m
           memory: 3Gi
