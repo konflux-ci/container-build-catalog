@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- Override `use-trusted-artifact` to analyzer P95+5% **256Mi/250m** via recipe `additionalSteps` (below ta-generator@v1.2.0 default 3Gi).
+
 - Add generator default use-TA computeResources (3Gi/50m) via ta-generator@v1.2.0.
 <!--
 When you make changes without bumping the version right away, document them here.
