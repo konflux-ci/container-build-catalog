@@ -11,6 +11,19 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.15.0
+
+### Added
+
+- New optional setting: `ENABLE_LAYER_CACHE=true` stores individual image layers
+  in the component's repository. buildah will use these cached layers to speed
+  up rebuilds. This is incompatible with hermetic builds (`HERMETIC=true`). Use
+  this feature to get fast feedback on your pull requests. Do not ship product
+  builds with this setting.
+- New `LAYER_CACHE_EXPIRES_AFTER` (default `1w`) controls the time-to-live for cache
+  layers so that quay will garbage collect them. This setting only takes effect
+  if `ENABLE_LAYER_CACHE=true`.
+
 ## 0.14.1
 
 ### Changed

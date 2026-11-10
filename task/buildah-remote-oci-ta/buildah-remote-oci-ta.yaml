@@ -5,7 +5,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: image-build, konflux
   labels:
-    app.kubernetes.io/version: 0.14.1
+    app.kubernetes.io/version: 0.15.0
     build.appstudio.redhat.com/build_type: docker
   name: buildah-remote-oci-ta
 spec:
@@ -65,6 +65,14 @@ spec:
       UNIX epoch. Conflicts with SOURCE_DATE_EPOCH.
     name: BUILD_TIMESTAMP
     type: string
+  - default: "1w"
+    description: Delete the cache entries after the specified time via the
+      quay.expires-after label on the images pushed to the cache repository.
+      Required when the layer cache is enabled, so that cache entries do not
+      accumulate forever. Time values could be something like 1h, 2d, 3w for
+      hours, days, and weeks, respectively.
+    name: LAYER_CACHE_EXPIRES_AFTER
+    type: string
   - default: ""
     description: The image is built from this commit.
     name: COMMIT_SHA
@@ -80,6 +88,13 @@ spec:
   - default: ./Dockerfile
     description: Path to the Dockerfile to build.
     name: DOCKERFILE
+    type: string
+  - default: "false"
+    description: Enable buildah's registry-distributed layer cache
+      (--cache-from/--cache-to). The cache entries are stored in the
+      component's own output repository (the repository part of IMAGE) as
+      content-addressed tags.
+    name: ENABLE_LAYER_CACHE
     type: string
   - default: etc-pki-entitlement
     description: Name of secret which contains the entitlement certificates
@@ -402,6 +417,10 @@ spec:
     env:
     - name: HOME
       value: /root
+    - name: LAYER_CACHE_EXPIRES_AFTER
+      value: $(params.LAYER_CACHE_EXPIRES_AFTER)
+    - name: ENABLE_LAYER_CACHE
+      value: $(params.ENABLE_LAYER_CACHE)
     - name: COMMIT_SHA
       value: $(params.COMMIT_SHA)
     - name: SOURCE_URL
@@ -498,6 +517,30 @@ spec:
         IMAGE="${IMAGE}-${PLATFORM//[^a-zA-Z0-9]/-}"
         export IMAGE
       fi
+
+      # (Resolve the layer cache repository before the remote invocation.)
+      # buildah pushes cache entries here as 64-hex tags.
+      CACHE_REPO=""
+      if [ "${ENABLE_LAYER_CACHE}" == "true" ]; then
+        if [ "${HERMETIC}" == "true" ]; then
+          echo "ERROR: ENABLE_LAYER_CACHE cannot be combined with HERMETIC=true: hermetic builds run without network access, so the layer cache repository is unreachable." >&2
+          exit 1
+        fi
+        if [ -z "${LAYER_CACHE_EXPIRES_AFTER}" ]; then
+          echo "ERROR: ENABLE_LAYER_CACHE requires LAYER_CACHE_EXPIRES_AFTER to be set (e.g. 1w) so that cache entries do not accumulate forever." >&2
+          exit 1
+        fi
+        cache_repo="${IMAGE%%@*}" # drop a digest, in case the ref has one
+        # strip the tag, but only if the last path component contains a
+        # colon, so that a registry port is not mistaken for a tag
+        cache_last="${cache_repo##*/}"
+        if [[ "${cache_last}" == *:* ]]; then
+          cache_repo="${cache_repo%:*}"
+        fi
+        CACHE_REPO="${cache_repo}"
+        echo "ENABLE_LAYER_CACHE: using ${CACHE_REPO} as the layer cache repository"
+      fi
+      export CACHE_REPO
 
       cat >scripts/script-build.sh <<'REMOTESSHEOF'
       #!/bin/bash
@@ -636,6 +679,13 @@ spec:
         fi
       fi
 
+      # Disable all caching if CACHE_REPO is not true.
+      if [ -n "${CACHE_REPO}" ]; then
+        no_cache_args=()
+      else
+        no_cache_args=(--no-cache)
+      fi
+
       # Prevent ShellCheck from giving a warning because 'image' is defined and 'IMAGE' is not.
       declare IMAGE
 
@@ -678,13 +728,21 @@ spec:
         "${sbom_args[@]}"
         --containerfile-json-output /shared/parsed_dockerfile.json
         --resolved-base-images-output /shared/base_images_digests
-        --no-cache
+        "${no_cache_args[@]}"
         --ulimits nofile=4096:4096
         --src-tls-verify="$TLSVERIFY"
         --dest-tls-verify="$TLSVERIFY"
         --allow-cross-platform-images="$ALLOW_CROSS_PLATFORM_IMAGES"
         "$@" # --annotations, --labels, --envs, --build-args, --build-args-files
       )
+
+      if [ -n "${CACHE_REPO}" ]; then
+        cmd+=(-- --layers --cache-from "${CACHE_REPO}" --cache-to "${CACHE_REPO}")
+        # Tag the pushed cache images with a quay.io expiration label so
+        # stale cache entries are garbage-collected. --layer-label only
+        # affects intermediate images (not the final image).
+        cmd+=(--layer-label "quay.expires-after=${LAYER_CACHE_EXPIRES_AFTER}")
+      fi
 
       echo "[$(date --utc -Ins)] $(printf '%q ' "${cmd[@]}")"
 
@@ -734,6 +792,8 @@ spec:
           -e ALLOW_CROSS_PLATFORM_IMAGES="${ALLOW_CROSS_PLATFORM_IMAGES@Q}" \
           -e ANNOTATIONS_FILE="${ANNOTATIONS_FILE@Q}" \
           -e BUILD_TIMESTAMP="${BUILD_TIMESTAMP@Q}" \
+          -e LAYER_CACHE_EXPIRES_AFTER="${LAYER_CACHE_EXPIRES_AFTER@Q}" \
+          -e CACHE_REPO="${CACHE_REPO@Q}" \
           -e CONTEXT="${CONTEXT@Q}" \
           -e CONTEXTUALIZE_SBOM="${CONTEXTUALIZE_SBOM@Q}" \
           -e HERMETIC="${HERMETIC@Q}" \
