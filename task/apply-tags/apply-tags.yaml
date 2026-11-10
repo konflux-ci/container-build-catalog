@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   labels:
-    app.kubernetes.io/version: "0.3.2"
+    app.kubernetes.io/version: "0.4.0"
   annotations:
     tekton.dev/pipelines.minVersion: "0.12.1"
     tekton.dev/tags: "konflux"
@@ -23,8 +23,8 @@ spec:
     default: []
   - name: ADDITIONAL_TAGS_FROM_LABEL
     type: string
-    description: Image label name to add tags from. Tags are comma or whitespace separated in the label value.
-    default: konflux.additional-tags
+    description: Image label name to add tags from. Tags are comma or whitespace separated in the label value. If empty, no label is checked.
+    default: ""
   - name: CA_TRUST_CONFIG_MAP_NAME
     type: string
     description: The name of the ConfigMap to read CA bundle data from.
@@ -54,6 +54,8 @@ spec:
       env:
         - name: KBC_LOG_LEVEL
           value: $(params.LOG_LEVEL)
+        - name: KBC_APPLY_TAGS_FROM_IMAGE_LABEL
+          value: $(params.ADDITIONAL_TAGS_FROM_LABEL)
       image: quay.io/konflux-ci/konflux-build-cli@sha256:85141954209ee158fe9e559869a0da196ff08c5d4bb15b1a6c2e54d4fcd6b52f
       command: ["konflux-build-cli", "image", "apply-tags"]
       args:
@@ -63,8 +65,6 @@ spec:
         - $(params.IMAGE_DIGEST)
         - --tags
         - $(params.ADDITIONAL_TAGS[*])
-        - --tags-from-image-label
-        - $(params.ADDITIONAL_TAGS_FROM_LABEL)
   volumes:
   - name: trusted-ca
     configMap:

@@ -11,6 +11,14 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.4.0
+
+### Changed
+
+- BREAKING: set empty string as default value for `ADDITIONAL_TAGS_FROM_LABEL` task parameter.
+  Now `konflux.additional-tags` (or another label to look for additional tags) needs to be provided explicitly.
+  This is done for optimization purposes to not to check the default label when it's not needed.
+
 ## 0.3.2
 
 ### Added
