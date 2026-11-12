@@ -19,8 +19,8 @@ var (
 	githubOrg                 = utils.GetEnv(constants.GITHUB_E2E_ORGANIZATION_ENV, "redhat-appstudio-qe")
 	gitlabOrg                 = utils.GetEnv(constants.GITLAB_QE_ORG_ENV, "konflux-qe")
 	gitlabBasicAuthSecretName = "gitlab-basic-auth-secret-" + util.GenerateRandomString(4)
-	itsGitURL                 = "https://github.com/konflux-ci/build-definitions"
+	itsGitURL                 = "https://github.com/conforma/tekton-catalog"
 	itsGitRevision            = "main"
-	itsPipelinePathInRepo     = "pipelines/enterprise-contract.yaml"
+	itsPipelinePathInRepo     = "pipelines/enterprise-contract/0.1/enterprise-contract.yaml"
 	ecPolicyName              = "ec-policy"
 )
