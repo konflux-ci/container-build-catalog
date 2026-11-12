@@ -7,7 +7,7 @@
 #      2	prefetch-dependencies
 #      3	create-trusted-artifact
 
-# use-trusted-artifact step — intentional min floors (prod oci-ta uses 4Gi/50m)
+# use-trusted-artifact step — intentional min floors (prod oci-ta uses 2Gi/350m)
 - op: test
   path: /spec/steps/1/name
   value: use-trusted-artifact

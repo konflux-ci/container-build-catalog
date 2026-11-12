@@ -294,7 +294,7 @@ spec:
           value: $(params.ociArtifactExpiresAfter)
       computeResources:
         limits:
-          memory: 3Gi
+          memory: 2Gi
         requests:
-          cpu: 50m
-          memory: 3Gi
+          cpu: 900m
+          memory: 2Gi

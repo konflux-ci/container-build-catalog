@@ -4,10 +4,9 @@
 
 ## Unreleased
 
-<!--
-When you make changes without bumping the version right away, document them here.
-If that's not something you ever plan to do, consider removing this section.
--->
+### Changed
+
+- Right-size `use-trusted-artifact` to fleet MAX+5% `768Mi`/`300m` (was generator `3Gi`/`50m`) via recipe `additionalSteps`.
 
 ## 0.3.2
 

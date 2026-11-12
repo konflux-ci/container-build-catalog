@@ -19,12 +19,13 @@ additionalSteps:
       - use
       - $(params.SOURCE_ARTIFACT)=/var/workdir/source
       - $(params.PREFETCH_ARTIFACT)=/var/workdir/prefetch
+    # Fleet MAX+5% (15d / 5% margin, 2026-11-12): ~2945Mi → 3Gi / ~700m.
     computeResources:
       limits:
-        memory: 256Mi
+        memory: 3Gi
       requests:
-        cpu: 250m
-        memory: 256Mi
+        cpu: 700m
+        memory: 3Gi
 removeWorkspaces:
   - workspace
 removeVolumes:
