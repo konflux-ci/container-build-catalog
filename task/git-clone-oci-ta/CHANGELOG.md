@@ -2,10 +2,9 @@
 
 ## Unreleased
 
-<!--
-When you make changes without bumping the version right away, document them here.
-If that's not something you ever plan to do, consider removing this section.
--->
+### Changed
+
+- Right-size `create-trusted-artifact` to fleet MAX+5% `2Gi`/`900m` via recipe `additionalSteps` (was generator `3Gi`/`50m`).
 
 ## 0.2.7
 

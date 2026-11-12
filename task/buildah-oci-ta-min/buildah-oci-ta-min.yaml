@@ -137,7 +137,7 @@ spec:
     type: string
   - default: ""
     description: The Trusted Artifact URI pointing to the artifact with the prefetched
-      dependencies.
+      dependencies. Empty by default for builds without prefetch.
     name: PREFETCH_ARTIFACT
     type: string
   - default: ""
@@ -210,7 +210,8 @@ spec:
     name: SKIP_UNUSED_STAGES
     type: string
   - description: The Trusted Artifact URI pointing to the artifact with the application
-      source code.
+      source code. This should be the same value as the result that was returned from
+      the previous task that produced the Trusted Artifact.
     name: SOURCE_ARTIFACT
     type: string
   - default: ""
@@ -362,17 +363,12 @@ spec:
     - $(params.PREFETCH_ARTIFACT)=/var/workdir/prefetch
     computeResources:
       limits:
-        memory: 3Gi
+        memory: 64Mi
       requests:
         cpu: 50m
-        memory: 3Gi
+        memory: 64Mi
     image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:6df16e808f147926a2ba5f88588350bd8f77e73fde43614e79ddbd6e2b097d2e
     name: use-trusted-artifact
-    volumeMounts:
-    - mountPath: /etc/pki/tls/certs/ca-custom-bundle.crt
-      name: trusted-ca
-      readOnly: true
-      subPath: ca-bundle.crt
   - args:
     - --build-args
     - $(params.BUILD_ARGS[*])

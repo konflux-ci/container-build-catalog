@@ -9,10 +9,9 @@ Use a minor task version bump only when it provides a significant user-facing up
 
 ## Unreleased
 
-<!--
-When you make changes without bumping the version right away, document them here.
-If that's not something you ever plan to do, consider removing this section.
--->
+### Changed
+
+- Right-size TA steps from fleet MAX+5%: `use-trusted-artifact` `2Gi`/`350m`, `create-trusted-artifact` `8Gi`/`1100m`.
 
 ## 0.11.1
 

@@ -162,10 +162,10 @@ spec:
           subPath: ca-bundle.crt
       computeResources:
         limits:
-          memory: 3Gi
+          memory: 2Gi
         requests:
-          cpu: 50m
-          memory: 3Gi
+          cpu: 350m
+          memory: 2Gi
       when:
         - input: $(params.input)
           operator: notin
@@ -285,10 +285,10 @@ spec:
           value: $(params.ociArtifactExpiresAfter)
       computeResources:
         limits:
-          memory: 7Gi
+          memory: 8Gi
         requests:
           cpu: 1100m
-          memory: 7Gi
+          memory: 8Gi
       when:
         - input: $(params.input)
           operator: notin

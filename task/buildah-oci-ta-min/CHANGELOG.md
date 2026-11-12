@@ -4,10 +4,9 @@
 
 ## Unreleased
 
-<!--
-When you make changes without bumping the version right away, document them here.
-If that's not something you ever plan to do, consider removing this section.
--->
+### Changed
+
+- Set `use-trusted-artifact` min floor to `64Mi`/`50m` (prod oci-ta is `256Mi`/`200m`).
 
 ## 0.14.2
 
