@@ -6,6 +6,14 @@
 
 *Nothing yet.*
 
+## 0.1.4
+
+### Changed
+
+- The default prefetch environment file is now `prefetch.env`.
+- Scripts source `/prefetch/prefetch.env`.
+- The same content is temporarily mounted at the legacy `/cachi2` path.
+
 ## 0.1.3
 
 ### Added
