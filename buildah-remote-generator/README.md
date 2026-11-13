@@ -16,7 +16,6 @@ This tool is used by the `hack/generate-buildah-remote.sh` script.
 Example usage:
 
 ```bash
-go run remote/main.go \
- --buildah-task ../task/buildah/buildah.yaml \
- --remote-task ../task/buildah-remote/buildah-remote.yaml
+cd buildah-remote-generator
+go run main.go --buildah-task ../task/buildah/buildah.yaml --remote-task ../task/buildah-remote/buildah-remote.yaml
 ```
