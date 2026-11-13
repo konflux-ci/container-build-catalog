@@ -9,7 +9,11 @@ When you make changes without bumping the version right away, document them here
 If that's not something you ever plan to do, consider removing this section.
 -->
 
-*Nothing yet.*
+## 0.14.2
+
+### Changed
+
+- No functional change; version aligned with `buildah` / oci-ta after `ta-generator@v1.2.0` pin (KONFLUX-16476).
 
 ## 0.14.1
 

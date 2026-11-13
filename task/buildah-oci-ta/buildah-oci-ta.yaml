@@ -7,7 +7,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: image-build, konflux
   labels:
-    app.kubernetes.io/version: 0.14.1
+    app.kubernetes.io/version: 0.14.2
     build.appstudio.redhat.com/build_type: docker
 spec:
   description: |-
@@ -141,7 +141,7 @@ spec:
       default: "false"
     - name: PREFETCH_ARTIFACT
       description: The Trusted Artifact URI pointing to the artifact with
-        the prefetched dependencies.
+        the prefetched dependencies. Empty by default for builds without prefetch.
       type: string
       default: ""
     - name: PREFETCH_INPUT
@@ -218,7 +218,9 @@ spec:
       default: "true"
     - name: SOURCE_ARTIFACT
       description: The Trusted Artifact URI pointing to the artifact with
-        the application source code.
+        the application source code. This should be the same value as the
+        result that was returned from the previous task that produced the
+        Trusted Artifact.
       type: string
     - name: SOURCE_DATE_EPOCH
       description: Timestamp in seconds since Unix epoch for reproducible
@@ -412,11 +414,12 @@ spec:
         - use
         - $(params.SOURCE_ARTIFACT)=/var/workdir/source
         - $(params.PREFETCH_ARTIFACT)=/var/workdir/prefetch
-      volumeMounts:
-        - mountPath: /etc/pki/tls/certs/ca-custom-bundle.crt
-          name: trusted-ca
-          readOnly: true
-          subPath: ca-bundle.crt
+      computeResources:
+        limits:
+          memory: 256Mi
+        requests:
+          cpu: 200m
+          memory: 256Mi
     - name: build
       image: quay.io/konflux-ci/konflux-build-cli@sha256:42809082a271a037f0774af81e536d9f7d03cf0236634ff44b1c5f85b7fa2216
       args:

@@ -4,12 +4,15 @@
 
 ## Unreleased
 
-<!--
-When you make changes without bumping the version right away, document them here.
-If that's not something you ever plan to do, consider removing this section.
--->
+### Changed
 
-*Nothing yet.*
+- Raise `use-trusted-artifact` to fleet MAX+5% `3Gi`/`700m` (was under-sized at `256Mi`/`250m`).
+
+## 0.4.1
+
+### Changed
+
+- Override `use-trusted-artifact` to analyzer P95+5% `256Mi`/`250m` via recipe `additionalSteps` (below `ta-generator@v1.2.0` default `3Gi`) (KONFLUX-16160).
 
 ## 0.4.0
 

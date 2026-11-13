@@ -4,12 +4,15 @@
 
 ## Unreleased
 
-<!--
-When you make changes without bumping the version right away, document them here.
-If that's not something you ever plan to do, consider removing this section.
--->
+### Changed
 
-*Nothing yet.*
+- Set `use-trusted-artifact` min floor to `64Mi`/`50m` (prod oci-ta is `256Mi`/`200m`).
+
+## 0.14.2
+
+### Changed
+
+- Propagate `use-trusted-artifact` `3Gi`/`50m` from `buildah-oci-ta` after `ta-generator@v1.2.0`.
 
 ## 0.14.1
 

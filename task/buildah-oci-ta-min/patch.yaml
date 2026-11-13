@@ -19,6 +19,20 @@
   path: /spec/stepTemplate/computeResources/requests/cpu
   value: 100m
 
+# use-trusted-artifact — lean min floor (prod oci-ta uses 256Mi/200m)
+- op: test
+  path: /spec/steps/0/name
+  value: use-trusted-artifact
+- op: replace
+  path: /spec/steps/0/computeResources/limits/memory
+  value: 64Mi
+- op: replace
+  path: /spec/steps/0/computeResources/requests/memory
+  value: 64Mi
+- op: replace
+  path: /spec/steps/0/computeResources/requests/cpu
+  value: 50m
+
 # build step
 - op: test
   path: /spec/steps/1/name
