@@ -16,6 +16,20 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.12.0
+
+### Changed
+
+- Prefetch output uses `/prefetch` and `prefetch.env` instead of `/cachi2` and
+  `cachi2.env`. `cachi2.env` is no longer written; only `prefetch.env` and
+  `prefetch-env.json` are produced.
+- If your Dockerfile (or scripts it calls) references `/cachi2/cachi2.env` or
+  `/cachi2/output`, update them to `/prefetch/prefetch.env` and `/prefetch/output`.
+- With matching buildah versions, the old `/cachi2/...` paths still work for a
+  limited time; they will be removed in a future release.
+
+Requires `buildah-oci-ta` >= 0.15.0
+
 ## 0.11.1
 
 - Hermeto release - <https://github.com/hermetoproject/hermeto/releases/tag/0.64.0>

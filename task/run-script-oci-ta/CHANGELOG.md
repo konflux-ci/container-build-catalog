@@ -6,6 +6,18 @@
 
 *Nothing yet.*
 
+## 0.1.4
+
+### Changed
+
+- Prefetch paths use `/prefetch/prefetch.env` instead of `/cachi2/cachi2.env`.
+- If your scripts reference the old `/cachi2/...` paths, update them to the
+  corresponding `/prefetch/...` counterparts.
+- For a limited time, `/cachi2` is still mounted for compatibility; it will be
+  removed in a future release.
+
+Requires `prefetch-dependencies-oci-ta` >= 0.12.0
+
 ## 0.1.3
 
 ### Added
