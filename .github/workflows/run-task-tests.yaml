@@ -86,11 +86,11 @@ jobs:
         with:
           repository: 'konflux-ci/konflux-ci'
           path: konflux-ci
-          ref: 81e4da70d2deb0deb4e2543f2dd367920ce06d0f
+          ref: acd0bf0adae9df45a8e148ed14be878809a2133b
 
       - name: Create k8s Kind Cluster
         if: steps.changed-task-dirs.outputs.any_changed == 'true'
-        uses: helm/kind-action@1544676c07bb3570fcb70166beaa07c4528fd4aa # v1.15.1
+        uses: helm/kind-action@ea822c7bf1874f08e5a491df991c228edffc3376 # v1.15.2
         with:
           config: konflux-ci/kind-config.yaml
 
