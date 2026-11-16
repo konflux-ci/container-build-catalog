@@ -11,6 +11,14 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.14.2
+
+### Fixed
+
+Always pass the build architecture to Mobster, even when no dependencies
+are prefetched. Previously, `--arch` was only set when prefetch was
+detected, so builds without prefetch could get wrong-arch SBOM metadata.
+
 ## 0.14.1
 
 ### Changed
