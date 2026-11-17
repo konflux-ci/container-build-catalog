@@ -36,6 +36,12 @@ additionalSteps:
       - use
       - $(params.SOURCE_ARTIFACT)=/var/workdir/source
       - $(params.PREFETCH_ARTIFACT)=/var/workdir/prefetch
+    # additionalSteps replace generator `add:`; keep useTAVolumeMount equivalent.
+    volumeMounts:
+      - mountPath: /etc/pki/tls/certs/ca-custom-bundle.crt
+        name: trusted-ca
+        readOnly: true
+        subPath: ca-bundle.crt
     computeResources:
       limits:
         memory: 256Mi

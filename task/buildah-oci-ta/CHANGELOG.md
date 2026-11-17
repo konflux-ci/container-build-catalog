@@ -8,6 +8,10 @@
 
 - Right-size `use-trusted-artifact` to fleet MAX+5% `256Mi`/`200m` (was generator `3Gi`/`50m`) via recipe `additionalSteps`.
 
+### Fixed
+
+- Restore `trusted-ca` `volumeMounts` on `use-trusted-artifact` (dropped when moving that step to recipe `additionalSteps`).
+
 ## 0.14.2
 
 ### Changed

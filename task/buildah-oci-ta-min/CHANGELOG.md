@@ -8,6 +8,10 @@
 
 - Set `use-trusted-artifact` min floor to `64Mi`/`50m` (prod oci-ta is `256Mi`/`200m`).
 
+### Fixed
+
+- Restore `trusted-ca` `volumeMounts` on `use-trusted-artifact` (inherited from `buildah-oci-ta`).
+
 ## 0.14.2
 
 ### Changed
