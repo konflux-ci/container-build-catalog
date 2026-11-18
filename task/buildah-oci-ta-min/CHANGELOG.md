@@ -6,7 +6,7 @@
 
 ### Changed
 
-- Set `use-trusted-artifact` min floor to `64Mi`/`50m` (prod oci-ta is `256Mi`/`200m`).
+- Set `use-trusted-artifact` min floor to `64Mi`/`50m` (full `buildah-oci-ta` is `256Mi`/`200m`).
 
 ### Fixed
 
