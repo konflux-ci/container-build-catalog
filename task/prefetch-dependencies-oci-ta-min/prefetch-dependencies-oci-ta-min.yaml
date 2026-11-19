@@ -6,7 +6,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: image-build, konflux
   labels:
-    app.kubernetes.io/version: 0.11.1
+    app.kubernetes.io/version: 0.11.2
   name: prefetch-dependencies-oci-ta-min
 spec:
   description: Task that prefetches project dependencies for hermetic build.
@@ -51,7 +51,7 @@ spec:
     type: string
   - description: Configures project packages that will have their dependencies prefetched.
     name: input
-  - default: debug
+  - default: info
     description: Set the logging level (debug, info, warn, error, fatal).
     name: log-level
   - default: strict
