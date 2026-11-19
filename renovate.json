@@ -108,6 +108,16 @@
         "value: (?:['\"])?(?<depName>[0-9a-z./-]+)(?::(?<currentValue>[0-9a-z.-]+))?@(?<currentDigest>sha256:[a-f0-9]{64})(?:['\"])?"
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "e2e-tests/**"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\w+_VERSION=(?<currentValue>\\S+)"
+      ],
+      "description": "Tool versions pinned as shell variables in e2e-tests Tekton task scripts"
     }
   ],
   "packageRules": [
