@@ -11,6 +11,19 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.15.0
+
+### Changed
+
+- Prefetch paths use `/prefetch/prefetch.env` and `/prefetch/output` instead of
+  `/cachi2/cachi2.env` and `/cachi2/output`.
+- If your Dockerfile (or scripts it calls) references the old `/cachi2/...` paths,
+  update them to the corresponding `/prefetch/...` counterparts.
+- For a limited time, `/cachi2/cachi2.env` and `/cachi2/output` are still mounted
+  for compatibility; they will be removed in a future release.
+
+Requires `prefetch-dependencies-oci-ta-min` >= 0.12.0
+
 ## 0.14.2
 
 ### Fixed
