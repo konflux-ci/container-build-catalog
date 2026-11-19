@@ -47,6 +47,9 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 				Expect(err).ShouldNot(HaveOccurred(), "failed to create test namespace")
 				testNamespace = f.UserNamespace
 
+				scenario = GetScenario(scenarioName)
+				GinkgoWriter.Printf("RUNNING SCENARIO: %s\n", scenario.Name)
+
 				applicationName = fmt.Sprintf("application-%s", util.GenerateRandomString(4))
 				application, err = f.AsKubeAdmin.HasController.CreateApplication(applicationName, testNamespace)
 				Expect(err).ShouldNot(HaveOccurred(), fmt.Sprintf("failed to create application %s", applicationName))
@@ -54,9 +57,6 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 				componentName = fmt.Sprintf("component-%s-%s", scenarioName, util.GenerateRandomString(4))
 				component, err = CreateComponent(f, scenarioName, testNamespace, componentName, application)
 				Expect(err).ShouldNot(HaveOccurred(), fmt.Sprintf("failed to create component for scenario: %s", scenarioName))
-
-				scenario = GetScenario(scenarioName)
-				GinkgoWriter.Printf("RUNNING SCENARIO: %s\n", scenario.Name)
 
 				if scenario.Name != "sample-python-basic-symlink" {
 					defaultECP, err := f.AsKubeAdmin.TektonController.GetEnterpriseContractPolicy("default", "enterprise-contract-service")
