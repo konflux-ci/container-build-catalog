@@ -61,7 +61,7 @@
     "packageRules": [
       {
         "matchFileNames": [
-          "task-generator/**",
+          "buildah-remote-generator/**",
           "pipeline-generator/**"
         ],
         "groupName": "generators",
