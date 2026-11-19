@@ -1,4 +1,7 @@
 ---
+# Note: create-trusted-artifact is an additionalStep (not recipe `add:`) so
+# computeResources survive `hack/generate-ta-tasks.sh` / check-ta CI.
+# Fleet MAX+5% (15d / 5% margin, 2026-11-12): ~1909Mi → 2Gi / ~900m.
 base: ../git-clone/git-clone.yaml
 removeParams:
   - deleteExisting
@@ -8,10 +11,48 @@ addEnvironment:
     value: /var/workdir
   - name: KBC_GIT_CLONE_SUBDIRECTORY
     value: source
-add:
-  - create-source
+add: []
 useTAVolumeMount: true
 removeWorkspaces:
   - output
 description: The git-clone-oci-ta Task will clone a repo from the provided url and store it as a trusted
     artifact in the provided OCI repository.
+addParams:
+  - name: ociStorage
+    type: string
+    description: The OCI repository where the Trusted Artifacts are stored.
+  - name: ociArtifactExpiresAfter
+    type: string
+    description: Expiration date for the trusted artifacts created in the
+      OCI repository. An empty string means the artifacts do not expire.
+    default: ""
+addResult:
+  - name: SOURCE_ARTIFACT
+    type: string
+    description: The Trusted Artifact URI pointing to the artifact with
+      the application source code.
+additionalSteps:
+  - at: 1
+    name: create-trusted-artifact
+    image: quay.io/konflux-ci/build-trusted-artifacts:latest@sha256:6df16e808f147926a2ba5f88588350bd8f77e73fde43614e79ddbd6e2b097d2e
+    args:
+      - create
+      - --store
+      - $(params.ociStorage)
+      - $(results.SOURCE_ARTIFACT.path)=/var/workdir/source
+    volumeMounts:
+      - mountPath: /var/workdir
+        name: workdir
+      - mountPath: /etc/pki/tls/certs/ca-custom-bundle.crt
+        name: trusted-ca
+        readOnly: true
+        subPath: ca-bundle.crt
+    env:
+      - name: IMAGE_EXPIRES_AFTER
+        value: $(params.ociArtifactExpiresAfter)
+    computeResources:
+      limits:
+        memory: 2Gi
+      requests:
+        cpu: 900m
+        memory: 2Gi

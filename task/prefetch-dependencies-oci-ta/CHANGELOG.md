@@ -9,12 +9,18 @@ Use a minor task version bump only when it provides a significant user-facing up
 
 ## Unreleased
 
-<!--
-When you make changes without bumping the version right away, document them here.
-If that's not something you ever plan to do, consider removing this section.
--->
+### Changed
 
-*Nothing yet.*
+- Right-size TA steps from fleet MAX+5%: `use-trusted-artifact` `2Gi`/`350m`, `create-trusted-artifact` `8Gi`/`1100m`.
+
+## 0.11.1
+
+### Changed
+
+- Bump pin to `ta-generator@v1.2.0` and right-size TA/prefetch resources (KONFLUX-14361 / KONFLUX-16476).
+- `use-trusted-artifact`: `3Gi`/`50m` (owned via recipe `additionalSteps` so generate-ta/check-ta keep them).
+- `create-trusted-artifact`: `7Gi`/`1100m` (req=lim, no `limits.cpu`).
+- `prefetch-dependencies`: `6Gi`/`1950m` (inherits from base).
 
 ## 0.11.1
 

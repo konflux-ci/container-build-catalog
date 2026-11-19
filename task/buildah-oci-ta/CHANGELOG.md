@@ -4,12 +4,19 @@
 
 ## Unreleased
 
-<!--
-When you make changes without bumping the version right away, document them here.
-If that's not something you ever plan to do, consider removing this section.
--->
+### Changed
 
-*Nothing yet.*
+- Right-size `use-trusted-artifact` to fleet MAX+5% `256Mi`/`200m` (was generator `3Gi`/`50m`) via recipe `additionalSteps`.
+
+### Fixed
+
+- Restore `trusted-ca` `volumeMounts` on `use-trusted-artifact` (dropped when moving that step to recipe `additionalSteps`).
+
+## 0.14.2
+
+### Changed
+
+- Add generator default `use-trusted-artifact` computeResources (`3Gi`/`50m`) via `ta-generator@v1.2.0`.
 
 ## 0.14.2
 
