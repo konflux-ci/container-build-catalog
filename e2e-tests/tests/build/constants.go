@@ -10,8 +10,8 @@ const (
 	SCENARIO_LIST_ENV  string = "SCENARIO_LIST"
 	SCENARIO_GROUP_ENV string = "SCENARIO_GROUP"
 
-	githubUrlFormat  = "https://github.com/%s/%s"
-	gitlabbUrlFormat = "https://gitlab.com/%s/%s"
+	githubUrlFormat = "https://github.com/%s/%s"
+	gitlabUrlFormat = "https://gitlab.com/%s/%s"
 )
 
 var (

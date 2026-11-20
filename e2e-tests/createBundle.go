@@ -21,8 +21,7 @@ import (
 )
 
 type Snapshot struct {
-	Application string              `json:"application"`
-	Components  []SnapshotComponent `json:"components"`
+	Components []SnapshotComponent `json:"components"`
 }
 
 type SnapshotComponent struct {

@@ -20,6 +20,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/openshift/library-go/pkg/image/reference"
 	pipeline "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"knative.dev/pkg/apis"
 )
 
@@ -60,6 +61,7 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 				if scenario.Name != "sample-python-basic-symlink" {
 					defaultECP, err := f.AsKubeAdmin.TektonController.GetEnterpriseContractPolicy("default", "enterprise-contract-service")
 					Expect(err).NotTo(HaveOccurred())
+
 					ecpSource := conforma.Source{
 						Config: &conforma.SourceConfig{
 							Include: []string{"@redhat"},
@@ -67,8 +69,13 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 						},
 					}
 					ecpSpec := contract.PolicySpecWithSource(defaultECP.Spec, ecpSource)
-					_, err = f.AsKubeAdmin.TektonController.CreateEnterpriseContractPolicy(ecPolicyName, testNamespace, ecpSpec)
+
+					_, err = f.AsKubeAdmin.TektonController.GetEnterpriseContractPolicy(ecPolicyName, testNamespace)
+					if k8serrors.IsNotFound(err) {
+						_, err = f.AsKubeAdmin.TektonController.CreateEnterpriseContractPolicy(ecPolicyName, testNamespace, ecpSpec)
+					}
 					Expect(err).ShouldNot(HaveOccurred())
+
 					integrationTestScenario, err = CreateIntegrationTestScenario(f.AsKubeAdmin.IntegrationController, "", applicationName, testNamespace, itsGitURL, itsGitRevision, itsPipelinePathInRepo, []string{"application"}, ecPolicyName)
 					Expect(err).ShouldNot(HaveOccurred())
 				}
