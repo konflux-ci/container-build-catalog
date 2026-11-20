@@ -1,12 +1,11 @@
-name: createBundle unit tests
+name: Unit tests for e2e tests source code
 
 on:
   pull_request:
     branches: [main]
     paths:
-      - 'e2e-tests/createBundle.go'
-      - 'e2e-tests/createBundle_test.go'
-      - '.github/workflows/e2e-createbundle-unit-tests.yaml'
+      - "e2e-tests/**"
+      - ".github/workflows/e2e-unit-tests.yaml"
   merge_group:
     types: [checks_requested]
 
@@ -15,7 +14,7 @@ permissions:
 
 jobs:
   test:
-    name: createBundle unit tests
+    name: go test
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
