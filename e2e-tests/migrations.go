@@ -34,9 +34,13 @@ func readTaskVersion(taskPath string) (string, error) {
 }
 
 func collectMigrationScripts(taskNames []string) ([]string, error) {
+	return collectMigrationScriptsFrom(filepath.Join("..", "task"), taskNames)
+}
+
+func collectMigrationScriptsFrom(taskRoot string, taskNames []string) ([]string, error) {
 	var scripts []string
 	for _, taskName := range taskNames {
-		taskDir := filepath.Join("..", "task", taskName)
+		taskDir := filepath.Join(taskRoot, taskName)
 		taskFile := filepath.Join(taskDir, taskName+".yaml")
 
 		version, err := readTaskVersion(taskFile)
