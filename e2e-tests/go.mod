@@ -3,14 +3,16 @@ module github.com/konflux-ci/container-build-catalog/e2e-tests
 go 1.26
 
 require (
+	github.com/conforma/crds/api v0.1.7
 	github.com/devfile/library/v2 v2.2.1-0.20230418160146-e75481b7eebd
 	github.com/google/go-containerregistry v0.21.0
 	github.com/konflux-ci/application-api v0.0.0-20260529131129-a9594acdc104
 	github.com/konflux-ci/e2e-tests v0.0.0-20260707100404-eca3dcc01e3c
+	github.com/konflux-ci/integration-service v0.0.0-20260327093127-2b0e36d45a91
 	github.com/onsi/ginkgo/v2 v2.28.0
 	github.com/onsi/gomega v1.39.1
 	github.com/openshift/library-go v0.0.0-20220525173854-9b950a41acdc
-	github.com/tektoncd/pipeline v1.9.2
+	github.com/tektoncd/pipeline v1.9.3
 	k8s.io/api v0.35.2
 	k8s.io/apimachinery v0.35.2
 	knative.dev/pkg v0.0.0-20250424013628-d5e74d29daa3
@@ -39,7 +41,6 @@ require (
 	github.com/codeready-toolchain/api v0.0.0-20231217224957-34f7cb3fcbf7 // indirect
 	github.com/codeready-toolchain/toolchain-common v0.0.0-20220523142428-2558e76260fb // indirect
 	github.com/codeready-toolchain/toolchain-e2e v0.0.0-20220525131508-60876bfb99d3 // indirect
-	github.com/conforma/crds/api v0.1.7 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.18.2 // indirect
 	github.com/containerd/typeurl/v2 v2.2.2 // indirect
 	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
@@ -101,7 +102,6 @@ require (
 	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/konflux-ci/image-controller v0.0.0-20260623200458-d2ed99f6f8a6 // indirect
-	github.com/konflux-ci/integration-service v0.0.0-20260327093127-2b0e36d45a91 // indirect
 	github.com/konflux-ci/operator-toolkit v0.0.0-20251118152634-b4f41f073069 // indirect
 	github.com/konflux-ci/release-service v0.0.0-20260127184035-c36c56a3c440 // indirect
 	github.com/magefile/mage v1.14.0 // indirect
