@@ -19,6 +19,7 @@ For **group** integration tests, set pipeline parameter `e2e-bundle-mode` to `ta
 Scenarios are organized into the following groups:
 
 ### 1. `basic` group
+
 Basic test scenarios covering common build patterns and configurations.
 
 **Purpose**: These scenarios acts as sanity/smoke tests and cover the most common use cases.
@@ -30,48 +31,65 @@ Hermetic build related scenarios that test dependency prefetching for various pa
 **Purpose**: Test hermetic builds where dependencies are prefetched and builds are isolated from external networks.
 
 ### 3. `source-build` group
+
 Source container build scenarios that test different source build related functionality.
 
 **Purpose**: Test source container generation with various parent image scenarios.
 
 ### 4. `excluded` group
+
 Scenarios that are not included currently in the regular test runs. Blocked due to multi-platform-controller is not available in upstream konflux environment yet.
 
 - `multiarch-oci` - Multi-architecture build with OCI media type
 - `multiarch-docker` - Multi-architecture build with Docker media type
 
+## Local Environment
+
+1. Make a copy of [`local.env.example`](local.env.example).
+2. Fill in the values, and source it in the shell that runs `ginkgo`.
+3. The tests read the process environment. They do not load any .env files.
+
+Some of the environment variables constants are declared in this repository; some are declared
+in the [konflux-ci/e2e-tests](https://github.com/konflux-ci/e2e-tests/tree/main/pkg/constants)
+repository.
+
+```bash
+cp local.env.example local.env
+source local.env
+ginkgo --v --label-filter="build-pipeline-e2e" ./tests/build/
+```
+
 ## Scenario Selection Logic
 
-The `GetScenarioEntries()` function determines which scenarios to run based on environment variables:
-
-### Environment Variables
-
-1. **`SCENARIO_GROUP`**: Selects scenarios by group (takes precedence over scenario list)
-2. **`SCENARIO_LIST`**: Comma-separated list of specific scenario names to run
-
-If both values are not set in the running environment, scenario named `sample-python-basic-oci-docker-build-oci-ta` will run.
+`GetScenarioEntries()` chooses scenarios from `SCENARIO_GROUP` and `SCENARIO_LIST`.
+`SCENARIO_GROUP` takes precedence. If both are empty, only the default scenario
+`sample-python-basic-oci-docker-build-oci-ta` will run.
 
 ### Examples
 
 **Default behavior** (no environment variables):
+
 ```bash
 # Runs only: sample-python-basic-oci-docker-build-oci-ta
 ginkgo --v --label-filter="build-pipeline-e2e" ./tests/build/
 ```
 
 **Run specific scenarios**:
+
 ```bash
 export SCENARIO_LIST="sample-python-basic-docker,from-scratch,oci-archive"
 ginkgo --v --label-filter="build-pipeline-e2e" ./tests/build/
 ```
 
 **Run basic scenarios**:
+
 ```bash
 export SCENARIO_GROUP="basic"
 ginkgo --v --label-filter="build-pipeline-e2e" ./tests/build/
 ```
 
 **Run all the basic and hermetic scenarios**:
+
 ```bash
 export SCENARIO_GROUP="all"
 ginkgo --v --label-filter="build-pipeline-e2e" ./tests/build/
@@ -92,6 +110,7 @@ To add a new test scenario:
 5. Document the scenario purpose in comments if it's non-obvious
 
 Example:
+
 ```go
 {
     Name:               "my-new-scenario",
