@@ -21,8 +21,7 @@ import (
 )
 
 type Snapshot struct {
-	Application string              `json:"application"`
-	Components  []SnapshotComponent `json:"components"`
+	Components []SnapshotComponent `json:"components"`
 }
 
 type SnapshotComponent struct {
@@ -310,7 +309,7 @@ func createBuildPipelineBundle(pipelineName constants.BuildPipelineType) (string
 	}
 
 	tag := fmt.Sprintf("%d-%s", time.Now().Unix(), util.GenerateRandomString(4))
-	quayOrg := utils.GetEnv("QUAY_ORG", constants.DefaultQuayOrg)
+	quayOrg := utils.GetEnv(constants.QUAY_E2E_ORGANIZATION_ENV, constants.DefaultQuayOrg)
 	newBuildPipelineImg := strings.ReplaceAll(constants.DefaultImagePushRepo, constants.DefaultQuayOrg, quayOrg)
 	newBuildPipelineRef, err = name.ParseReference(fmt.Sprintf("%s:pipeline-bundle-%s", newBuildPipelineImg, tag))
 	if err != nil {

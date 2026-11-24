@@ -115,7 +115,7 @@ func CreateComponent(f *framework.Framework, scenarioName, testNamespace, compon
 			return nil, fmt.Errorf("gitlab token env is empty, must be set for running the gitlab scenario")
 		}
 		projectID := fmt.Sprintf("%s/%s", gitlabOrg, scenario.RepoName)
-		gitUrl = fmt.Sprintf(gitlabbUrlFormat, gitlabOrg, scenario.RepoName)
+		gitUrl = fmt.Sprintf(gitlabUrlFormat, gitlabOrg, scenario.RepoName)
 		scenario.GitURL = gitUrl
 		err = f.AsKubeAdmin.CommonController.Gitlab.CreateGitlabNewBranch(projectID, baseBranchName, scenario.Revision, scenario.DefaultBranch)
 		Expect(err).ShouldNot(HaveOccurred(), "failed to create new branch in gitlab")
