@@ -11,6 +11,16 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.5.0
+
+### Changed
+
+- The task runs the Konflux Build CLI instead of the Python `source_build.py`.
+  Finding the base image moved into the same step, so the separate
+  `get-base-images` step is gone.
+
+The parameters and results are unchanged.
+
 ## 0.4.0
 
 ### Changed
