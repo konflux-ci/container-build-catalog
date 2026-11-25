@@ -28,6 +28,7 @@ type TestScenarioSpec struct {
 	OverrideMediaType        string                      // Optional: Only for the media type override verification scenarios
 	WorkingDirMount          string                      // Optional: Only for the oci-archive test scenario
 	ConformaPolicyExclusions []string                    // Optional: Only for conforma validations, list of exclusion to be added to the policy during conforma validation
+	KeylessSigning           bool                        // Optional: Only for the keyless signing scenario
 }
 
 var TestScenarios = []TestScenarioSpec{
@@ -63,6 +64,7 @@ var TestScenarios = []TestScenarioSpec{
 		PrefetchInput:      "",
 		ManifestMediaType:  "oci",
 		OverrideMediaType:  "oci",
+		KeylessSigning:     true,
 		ConformaPolicyExclusions: []string{"hermetic_task", "rpm_repos", "source_image", "cve",
 			"tasks.required_tasks_found:tpa-scan", "base_image_registries.base_image_permitted:quay.io/devfile/python",
 			"test.no_erred_tests:ecosystem-cert-preflight-checks", "test.no_failed_tests:ecosystem-cert-preflight-checks",
