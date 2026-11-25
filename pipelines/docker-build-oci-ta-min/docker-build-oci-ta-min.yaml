@@ -255,7 +255,7 @@ spec:
       - name: name
         value: deprecated-image-check
       - name: bundle
-        value: quay.io/konflux-ci/tekton-catalog/task-deprecated-image-check:0.5@sha256:f86e420c8af92a8ed9ca8f82dee3cd14f8ba03cc592583595ea78642513f00c2
+        value: quay.io/konflux-ci/tekton-catalog/task-deprecated-image-check:0.5.1@sha256:46742abe6011c2ad3e8a77d1282cd7f9423f978a2b474c0af1d27017303d43cb
       - name: kind
         value: task
       resolver: bundles
@@ -277,7 +277,7 @@ spec:
       - name: name
         value: clamav-scan-min
       - name: bundle
-        value: quay.io/konflux-ci/tekton-catalog/task-clamav-scan-min:0.3.6@sha256:920913e4685f65e83abe9a55b2314c95124fbfc9173c040c733d8157be7306f8
+        value: quay.io/konflux-ci/tekton-catalog/task-clamav-scan-min:0.3.7@sha256:24b85de5b35d8b136ed8ed2f791acc0156b44bc1231e08fcb26a67684bbb4bf1
       - name: kind
         value: task
       resolver: bundles
@@ -351,7 +351,7 @@ spec:
       - name: name
         value: rpms-signature-scan
       - name: bundle
-        value: quay.io/konflux-ci/tekton-catalog/task-rpms-signature-scan:0.2.2@sha256:9568477e12804f2d48ca77345dce21f5f2e2e7dad81d00f5316288d2c6d1699c
+        value: quay.io/konflux-ci/tekton-catalog/task-rpms-signature-scan:0.2.2@sha256:44a0a7379e4b124c3cc9a306013441113498bc8e87412924e940194d20bee23b
       - name: kind
         value: task
       resolver: bundles
