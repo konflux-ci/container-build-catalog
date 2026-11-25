@@ -176,6 +176,7 @@ spec:
           - name: pipeline-aggregate-status
             value: $(tasks.status)
       - name: deprovision-kind-cluster
+        onError: continue
         taskRef:
           resolver: git
           params:
