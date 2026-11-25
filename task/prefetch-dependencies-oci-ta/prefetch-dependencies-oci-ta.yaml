@@ -7,7 +7,7 @@ metadata:
     tekton.dev/pipelines.minVersion: 0.12.1
     tekton.dev/tags: image-build, konflux
   labels:
-    app.kubernetes.io/version: 0.11.1
+    app.kubernetes.io/version: 0.11.2
 spec:
   description: Task that prefetches project dependencies for hermetic build.
   params:
@@ -54,7 +54,7 @@ spec:
         prefetched.
     - name: log-level
       description: Set the logging level (debug, info, warn, error, fatal).
-      default: debug
+      default: info
     - name: mode
       description: 'Control how input requirement violations are handled:
         strict (errors) or permissive (warnings).'
