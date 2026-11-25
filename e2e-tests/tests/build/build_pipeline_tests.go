@@ -53,6 +53,7 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 			var buildPipelineRun *pipeline.PipelineRun
 			var snapshot *appservice.Snapshot
 			var integrationTestScenario *integrationApi.IntegrationTestScenario
+			var keylessSigningEnabled bool
 
 			BeforeAll(func() {
 				f, err = framework.NewFramework(fmt.Sprintf("build-e2e-%s", scenarioName))
@@ -61,6 +62,14 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 
 				scenario = GetScenario(scenarioName)
 				GinkgoWriter.Printf("RUNNING SCENARIO: %s\n", scenario.Name)
+
+				if scenario.KeylessSigning {
+					if !IsSigstoreStackDeployed(f.AsKubeAdmin.CommonController.KubeRest()) {
+						Skip("the cluster has no sigstore stack, run the deploy-sigstore task to enable this scenario")
+					}
+					EnableKeylessSigning(f)
+					keylessSigningEnabled = true
+				}
 
 				applicationName = fmt.Sprintf("application-%s", util.GenerateRandomString(4))
 				application, err = f.AsKubeAdmin.HasController.CreateApplication(applicationName, testNamespace)
@@ -94,6 +103,11 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 			})
 
 			AfterAll(func() {
+				if keylessSigningEnabled {
+					DisableKeylessSigning(f)
+					keylessSigningEnabled = false
+				}
+
 				if !CurrentSpecReport().Failed() {
 					Eventually(func() error {
 						return f.AsKubeAdmin.HasController.DeleteAllComponentsInASpecificNamespace(testNamespace, time.Minute*2)
@@ -177,6 +191,14 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 				}
 				// TODO: change the last argument once konflux-ci/e2e-tests drops clair-scan from the codebase.
 				Expect(build.ValidateBuildPipelineTestResults(buildPipelineRun, f.AsKubeAdmin.CommonController.KubeRest(), false, true)).To(Succeed())
+			})
+			It("should validate keyless signing workflow", func() {
+				if !scenario.KeylessSigning {
+					Skip("keyless signing validation is not needed for this scenario")
+					return
+				}
+				VerifySignedImage(buildPipelineRun)
+				VerifyImageSignature(f, buildPipelineRun, testNamespace)
 			})
 			It("floating tags are created successfully", func() {
 				if !scenario.CheckAdditionalTags {
