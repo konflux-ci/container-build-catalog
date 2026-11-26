@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Right-size `create-trusted-artifact` to fleet MAX+5% `2Gi`/`900m` via recipe `additionalSteps` (was generator `3Gi`/`50m`).
+
+## 0.2.7
+
+### Changed
+
+- Lower `create-trusted-artifact` CPU request `1` → `50m` via `ta-generator@v1.2.0`.
+
 ## 0.2.6
 
 ### Changed

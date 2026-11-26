@@ -109,15 +109,16 @@ spec:
         - name: PIP_INDEX_URL
           value: $(params.pip-index-url)
       computeResources:
+        # KONFLUX-14361 / KONFLUX-14352: sized from 15d fleet MAX on
+        # prefetch-dependencies-oci-ta (peak ~5.5Gi / ~1.84 cpu). Drop limits.cpu
+        # per epic policy; mem req=lim. Historical note: unlimited CPU once drove
+        # golang prefetch mem spikes — monitor after merge; tenants above 6Gi
+        # should set pipeline task computeResources overrides.
         limits:
-          # We have seen strange behavior where prefetch memory consumption is
-          # abnormally high when CPU is unlimited and that lead to the pods being
-          # OOMKilled. This was observed with golang backend only so far.
-          cpu: "1"
-          memory: 3Gi
+          memory: 6Gi
         requests:
-          cpu: "1"
-          memory: 3Gi
+          cpu: 1950m
+          memory: 6Gi
       when:
         - input: $(params.input)
           operator: notin

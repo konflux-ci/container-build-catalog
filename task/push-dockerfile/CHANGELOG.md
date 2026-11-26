@@ -9,7 +9,11 @@ When you make changes without bumping the version right away, document them here
 If that's not something you ever plan to do, consider removing this section.
 -->
 
-*Nothing yet.*
+## 0.3.2
+
+### Changed
+
+- No functional change; companion oci-ta gets generator default use-TA computeResources (`3Gi`/`50m`) via `ta-generator@v1.2.0` (KONFLUX-16476 / KONFLUX-16159).
 
 ## 0.3.1
 
