@@ -11,6 +11,19 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.16.0
+
+### Changed
+
+- Parameter `CONTEXTUALIZE_SBOM` is now set to `true` and contextualization
+  of SBOMs is now enabled by default for non-hermetic builds. The built
+  image will contain the `io.buildah.stage.name` and `io.buildah.stage.base`
+  labels. To opt out, set `CONTEXTUALIZE_SBOM` to `false`.
+
+### Fixed
+
+- Mobster version updated, contains a fix for possible dangling SPDX relationships.
+
 ## 0.15.0
 
 ### Changed
@@ -26,19 +39,11 @@ Requires `prefetch-dependencies-oci-ta` >= 0.12.0
 
 ## 0.14.2
 
-### Changed
-
-- Parameter `CONTEXTUALIZE_SBOM` is now set to `true` and contextualization
-  of SBOMs is now enabled by default for non-hermetic builds. The built
-  image will contain the `io.buildah.stage.name` and `io.buildah.stage.base`
-  labels. To opt out, set `CONTEXTUALIZE_SBOM` to `false`.
-
 ### Fixed
 
-- Always pass the build architecture to Mobster, even when no dependencies
-  are prefetched. Previously, `--arch` was only set when prefetch was
-  detected, so builds without prefetch could get wrong-arch SBOM metadata.
-- Mobster version updated, contains a fix for possible dangling SPDX relationships.
+Always pass the build architecture to Mobster, even when no dependencies
+are prefetched. Previously, `--arch` was only set when prefetch was
+detected, so builds without prefetch could get wrong-arch SBOM metadata.
 
 ## 0.14.1
 
