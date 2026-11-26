@@ -1,4 +1,4 @@
-module github.com/konflux-ci/container-build-catalog/task-generator/remote
+module github.com/konflux-ci/container-build-catalog/buildah-remote-generator
 
 go 1.27.3
 
