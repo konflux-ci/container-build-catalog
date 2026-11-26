@@ -24,13 +24,25 @@ import (
 	"knative.dev/pkg/apis"
 )
 
+func ginkgoDecorators(scenarioName string) []any {
+	decorators := []any{Ordered}
+	// Serial allows the user to mark specs and containers of specs as only eligible to run in serial.
+	// https://onsi.github.io/ginkgo/#the-serial-decorator
+	// Keyless signing is turned on by the konflux-info/cluster-config ConfigMap, which
+	// is cluster wide state so that it cannot overlap with any other scenario.
+	if GetScenario(scenarioName).KeylessSigning {
+		decorators = append(decorators, Serial)
+	}
+	return decorators
+}
+
 var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pipeline-e2e"), func() {
 	defer GinkgoRecover()
 
 	scenarioEntries := GetScenarioEntries()
 	DescribeTableSubtree("Build pipeline", func(scenarioName string) {
 		// separate Describe is needed to avoid skipping tests for other scenarios when one fails
-		Describe(fmt.Sprintf("scenario %q", scenarioName), Ordered, func() {
+		Describe(fmt.Sprintf("scenario %q", scenarioName), ginkgoDecorators(scenarioName), func() {
 			var f *framework.Framework
 			var err error
 			var application *appservice.Application
