@@ -157,7 +157,7 @@ spec:
           - name: test-environment
             value: "upstream"
           - name: scenario-group
-            value: "all"
+            value: ""
           - name: docker-build-pipeline-bundle
             value: ""
           - name: docker-build-oci-ta-pipeline-bundle

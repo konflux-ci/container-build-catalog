@@ -57,3 +57,41 @@ spec:
         done
 
         bash "${SIGSTORE_DIR}/install.sh"
+
+        # Fulcio reads the cluster CA from /var/run/fulcio/ca.crt only when
+        # https://kubernetes.default.svc is configured. Service account tokens
+        # use the issuer from the API server discovery document, which on kind
+        # is https://kubernetes.default.svc.cluster.local. install.sh keeps only
+        # that discovery issuer, so Fulcio cannot verify the API server
+        # certificate and rejects the token.
+        python3 - <<'PY'
+        import json
+        import subprocess
+
+        configmap = json.loads(subprocess.check_output([
+            "kubectl", "get", "cm", "fulcio-server-config", "-n", "fulcio-system", "-o", "json",
+        ]))
+        config = json.loads(configmap["data"]["config.json"])
+        issuers = config.setdefault("OIDCIssuers", {})
+        short_issuer = "https://kubernetes.default.svc"
+        if short_issuer in issuers:
+            raise SystemExit(0)
+
+        issuers[short_issuer] = {
+            "IssuerURL": short_issuer,
+            "ClientID": "sigstore",
+            "Type": "kubernetes",
+        }
+        patch = json.dumps({"data": {"config.json": json.dumps(config)}})
+        subprocess.check_call([
+            "kubectl", "patch", "cm", "fulcio-server-config", "-n", "fulcio-system",
+            "--type", "merge", "-p", patch,
+        ])
+        subprocess.check_call([
+            "kubectl", "rollout", "restart", "deploy/fulcio-server", "-n", "fulcio-system",
+        ])
+        subprocess.check_call([
+            "kubectl", "rollout", "status", "deploy/fulcio-server", "-n", "fulcio-system",
+            "--timeout=180s",
+        ])
+        PY
