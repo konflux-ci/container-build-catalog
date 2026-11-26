@@ -24,6 +24,7 @@ load_envs() {
         [PAC_GITHUB_APP_WEBHOOK_SECRET]="${konflux_ci_secrets_file}/pac-github-app-webhook-secret"
         [SMEE_CHANNEL]="${konflux_ci_secrets_file}/smee-channel"
         [GITLAB_BOT_TOKEN]="${konflux_ci_secrets_file}/gitlab-bot-token"
+        [REGISTRY_REDHAT_IO_TOKEN]="${konflux_ci_secrets_file}/registry_redhat_io_token"
     )
 
     for var in "${!config_envs[@]}"; do
