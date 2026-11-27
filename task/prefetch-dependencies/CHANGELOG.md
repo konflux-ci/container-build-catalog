@@ -16,6 +16,15 @@ If that's not something you ever plan to do, consider removing this section.
 
 *Nothing yet.*
 
+## 0.12.1
+
+- Hermeto release - <https://github.com/hermetoproject/hermeto/releases/tag/0.65.1>
+- Fixes [CVE-2026-135765](https://github.com/hermetoproject/hermeto/security/advisories/GHSA-fx94-7jj8-99cw) (GHSA-fx94-7jj8-99cw, High, CVSS 8.1): Yarn workspace focus runs lifecycle scripts from nested workspaces
+- Fixes [CVE-2026-135766](https://github.com/hermetoproject/hermeto/security/advisories/GHSA-xwf3-xg63-p59r) (GHSA-xwf3-xg63-p59r, High, CVSS 8.2): pnpm backend follows `.npmrc` symlink, leaking files outside the source tree
+- Fixes [CVE-2026-135767](https://github.com/hermetoproject/hermeto/security/advisories/GHSA-fwc7-5v7f-vgm4) (GHSA-fwc7-5v7f-vgm4, High, CVSS 7.4): dependency confusion in bundler backend when a registry proxy is configured
+- Also bundles Hermeto 0.65.0 - <https://github.com/hermetoproject/hermeto/releases/tag/0.65.0>
+- Hermeto 0.63 and 0.64 images were released only on amd64, starting with 0.65.1, they are released on arm64 as well again.
+
 ## 0.12.0
 
 ### Changed
