@@ -65,7 +65,10 @@ log "INFO" "Running container-build-catalog e2e tests with label filter: build-p
 
 cd /workspace/source/e2e-tests
 
+export GOTOOLCHAIN=auto
+
 go install github.com/onsi/ginkgo/v2/ginkgo
+go install github.com/sigstore/cosign/v3/cmd/cosign@latest
 
 timeout "$E2E_TIMEOUT" ginkgo \
     -p \

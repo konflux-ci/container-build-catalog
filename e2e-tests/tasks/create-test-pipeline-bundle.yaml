@@ -51,7 +51,7 @@ spec:
       description: "Tekton Bundle Builder OCI TA Pipeline Bundle Reference"
   steps:
     - name: create-bundle
-      image: registry.access.redhat.com/ubi10/go-toolset:1.26.10@sha256:5d2ab83e88506afee6bcc909fdab425ab979725ab30d6ad43a02aaa77e2258ff
+      image: registry.access.redhat.com/ubi10/go-toolset:1.27.3@sha256:1b1b6d0a428218c617c43629240c42954beff44c48d47fe2ed25f1dfdc9dfa54
       workingDir: /workspace/source
       volumeMounts:
         - name: konflux-ci-secrets-volume

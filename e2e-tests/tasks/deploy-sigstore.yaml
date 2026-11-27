@@ -1,0 +1,97 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: deploy-sigstore
+spec:
+  description: |
+    Deploys the Sigstore stack on the test cluster using the sigstore scaffold Helm chart,
+    so that the keyless signing support of the buildah task can be exercised by the e2e suite.
+  params:
+    - name: cluster-access-secret-name
+      type: string
+      description: "The name of the secret containing the kubeconfig to access the target cluster."
+  volumes:
+    - name: cluster-secret-volume
+      secret:
+        secretName: $(params.cluster-access-secret-name)
+  steps:
+    - name: deploy-sigstore
+      image: quay.io/konflux-ci/task-runner:4.0.0@sha256:ab7440e1101af1ff0418e16badede2f1590664d3189099030bf3f782371bd9da
+      computeResources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1
+          memory: 2Gi
+      volumeMounts:
+        - name: cluster-secret-volume
+          mountPath: /tmp/kubeconfig
+          subPath: kubeconfig
+      env:
+        - name: KUBECONFIG
+          value: /tmp/kubeconfig
+      script: |
+        #!/bin/bash
+        set -euo pipefail
+
+        HELM_VERSION=v3.21.4
+        HELM_ARCH=amd64
+        HELM_TARBALL="helm-${HELM_VERSION}-linux-${HELM_ARCH}.tar.gz"
+
+        curl -fsSL --retry 3 --retry-delay 5 --retry-all-errors \
+            -o "/tmp/${HELM_TARBALL}" \
+            "https://get.helm.sh/${HELM_TARBALL}"
+
+        mkdir -p /tmp/bin
+        tar -xzf "/tmp/${HELM_TARBALL}" --strip-components=1 -C /tmp/bin "linux-${HELM_ARCH}/helm"
+        export PATH="/tmp/bin:${PATH}"
+
+        SIGSTORE_DIR=/tmp/sigstore
+        mkdir -p "${SIGSTORE_DIR}"
+        for file in install.sh values.yaml; do
+            curl -fsSL --retry 3 --retry-delay 5 --retry-all-errors \
+                -o "${SIGSTORE_DIR}/${file}" \
+                "https://raw.githubusercontent.com/konflux-ci/konflux-ci/main/integrations/sigstore/${file}"
+        done
+
+        bash "${SIGSTORE_DIR}/install.sh"
+
+        # Fulcio reads the cluster CA from /var/run/fulcio/ca.crt only when
+        # https://kubernetes.default.svc is configured. Service account tokens
+        # use the issuer from the API server discovery document, which on kind
+        # is https://kubernetes.default.svc.cluster.local. install.sh keeps only
+        # that discovery issuer, so Fulcio cannot verify the API server
+        # certificate and rejects the token.
+        python3 - <<'PY'
+        import json
+        import subprocess
+
+        configmap = json.loads(subprocess.check_output([
+            "kubectl", "get", "cm", "fulcio-server-config", "-n", "fulcio-system", "-o", "json",
+        ]))
+        config = json.loads(configmap["data"]["config.json"])
+        issuers = config.setdefault("OIDCIssuers", {})
+        short_issuer = "https://kubernetes.default.svc"
+        if short_issuer in issuers:
+            raise SystemExit(0)
+
+        issuers[short_issuer] = {
+            "IssuerURL": short_issuer,
+            "ClientID": "sigstore",
+            "Type": "kubernetes",
+        }
+        patch = json.dumps({"data": {"config.json": json.dumps(config)}})
+        subprocess.check_call([
+            "kubectl", "patch", "cm", "fulcio-server-config", "-n", "fulcio-system",
+            "--type", "merge", "-p", patch,
+        ])
+        subprocess.check_call([
+            "kubectl", "rollout", "restart", "deploy/fulcio-server", "-n", "fulcio-system",
+        ])
+        subprocess.check_call([
+            "kubectl", "rollout", "status", "deploy/fulcio-server", "-n", "fulcio-system",
+            "--timeout=180s",
+        ])
+        PY

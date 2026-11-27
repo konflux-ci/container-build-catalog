@@ -24,13 +24,25 @@ import (
 	"knative.dev/pkg/apis"
 )
 
+func ginkgoDecorators(scenarioName string) []any {
+	decorators := []any{Ordered}
+	// Serial allows the user to mark specs and containers of specs as only eligible to run in serial.
+	// https://onsi.github.io/ginkgo/#the-serial-decorator
+	// Keyless signing is turned on by the konflux-info/cluster-config ConfigMap, which
+	// is cluster wide state so that it cannot overlap with any other scenario.
+	if GetScenario(scenarioName).KeylessSigning {
+		decorators = append(decorators, Serial)
+	}
+	return decorators
+}
+
 var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pipeline-e2e"), func() {
 	defer GinkgoRecover()
 
 	scenarioEntries := GetScenarioEntries()
 	DescribeTableSubtree("Build pipeline", func(scenarioName string) {
 		// separate Describe is needed to avoid skipping tests for other scenarios when one fails
-		Describe(fmt.Sprintf("scenario %q", scenarioName), Ordered, func() {
+		Describe(fmt.Sprintf("scenario %q", scenarioName), ginkgoDecorators(scenarioName), func() {
 			var f *framework.Framework
 			var err error
 			var application *appservice.Application
@@ -41,11 +53,23 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 			var buildPipelineRun *pipeline.PipelineRun
 			var snapshot *appservice.Snapshot
 			var integrationTestScenario *integrationApi.IntegrationTestScenario
+			var keylessSigningEnabled bool
 
 			BeforeAll(func() {
 				f, err = framework.NewFramework(fmt.Sprintf("build-e2e-%s", scenarioName))
 				Expect(err).ShouldNot(HaveOccurred(), "failed to create test namespace")
 				testNamespace = f.UserNamespace
+
+				scenario = GetScenario(scenarioName)
+				GinkgoWriter.Printf("RUNNING SCENARIO: %s\n", scenario.Name)
+
+				if scenario.KeylessSigning {
+					if !IsSigstoreStackDeployed(f.AsKubeAdmin.CommonController.KubeRest()) {
+						Skip("the cluster has no sigstore stack, run the deploy-sigstore task to enable this scenario")
+					}
+					EnableKeylessSigning(f)
+					keylessSigningEnabled = true
+				}
 
 				applicationName = fmt.Sprintf("application-%s", util.GenerateRandomString(4))
 				application, err = f.AsKubeAdmin.HasController.CreateApplication(applicationName, testNamespace)
@@ -54,9 +78,6 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 				componentName = fmt.Sprintf("component-%s-%s", scenarioName, util.GenerateRandomString(4))
 				component, err = CreateComponent(f, scenarioName, testNamespace, componentName, application)
 				Expect(err).ShouldNot(HaveOccurred(), fmt.Sprintf("failed to create component for scenario: %s", scenarioName))
-
-				scenario = GetScenario(scenarioName)
-				GinkgoWriter.Printf("RUNNING SCENARIO: %s\n", scenario.Name)
 
 				if scenario.Name != "sample-python-basic-symlink" {
 					defaultECP, err := f.AsKubeAdmin.TektonController.GetEnterpriseContractPolicy("default", "enterprise-contract-service")
@@ -82,6 +103,11 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 			})
 
 			AfterAll(func() {
+				if keylessSigningEnabled {
+					DisableKeylessSigning(f)
+					keylessSigningEnabled = false
+				}
+
 				if !CurrentSpecReport().Failed() {
 					Eventually(func() error {
 						return f.AsKubeAdmin.HasController.DeleteAllComponentsInASpecificNamespace(testNamespace, time.Minute*2)
@@ -165,6 +191,14 @@ var _ = framework.BuildSuiteDescribe("Build pipeline E2E test", Label("build-pip
 				}
 				// TODO: change the last argument once konflux-ci/e2e-tests drops clair-scan from the codebase.
 				Expect(build.ValidateBuildPipelineTestResults(buildPipelineRun, f.AsKubeAdmin.CommonController.KubeRest(), false, true)).To(Succeed())
+			})
+			It("should validate keyless signing workflow", func() {
+				if !scenario.KeylessSigning {
+					Skip("keyless signing validation is not needed for this scenario")
+					return
+				}
+				VerifySignedImage(buildPipelineRun)
+				VerifyImageSignature(f, buildPipelineRun, testNamespace)
 			})
 			It("floating tags are created successfully", func() {
 				if !scenario.CheckAdditionalTags {

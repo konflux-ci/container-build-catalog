@@ -117,10 +117,25 @@ spec:
             value: $(params.konflux-test-infra-secret)
           - name: pipeline-run-name
             value: $(context.pipelineRun.name)
+      - name: deploy-sigstore
+        runAfter:
+          - deploy-konflux
+        taskRef:
+          resolver: git
+          params:
+            - name: url
+              value: $(params.git-url)
+            - name: revision
+              value: $(params.revision)
+            - name: pathInRepo
+              value: e2e-tests/tasks/deploy-sigstore.yaml
+        params:
+          - name: cluster-access-secret-name
+            value: kfg-$(context.pipelineRun.name)
       - name: container-build-catalog-e2e-tests
         timeout: 2h
         runAfter:
-          - deploy-konflux
+          - deploy-sigstore
         taskRef:
           resolver: git
           params:
@@ -142,7 +157,7 @@ spec:
           - name: test-environment
             value: "upstream"
           - name: scenario-group
-            value: "all"
+            value: ""
           - name: docker-build-pipeline-bundle
             value: ""
           - name: docker-build-oci-ta-pipeline-bundle
