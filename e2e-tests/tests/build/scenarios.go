@@ -1,7 +1,6 @@
 package build
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/konflux-ci/e2e-tests/pkg/constants"
@@ -408,25 +407,26 @@ func GetScenario(scenarioName string) TestScenarioSpec {
 func GetScenarioEntries() []TableEntry {
 	var entries []TableEntry
 	// Scenario group takes precendence than scenario list if both set
-	scenario_group := utils.GetEnv(SCENARIO_GROUP_ENV, "")
-	if scenario_group == "" {
-		fmt.Println("scenario group is empty")
-		scenario_list := utils.GetEnv(SCENARIO_LIST_ENV, "sample-python-basic-oci-docker-build-oci-ta")
-		scenarioNames := strings.Split(scenario_list, ",")
+	scenarioGroup := utils.GetEnv(SCENARIO_GROUP_ENV, "")
+	switch scenarioGroup {
+	case "":
+		scenarioList := utils.GetEnv(SCENARIO_LIST_ENV, "sample-python-basic-oci-docker-build-oci-ta")
+		GinkgoWriter.Printf("Running scenarios from SCENARIO_LIST: %s\n", scenarioList)
+		scenarioNames := strings.Split(scenarioList, ",")
 		for _, scenarioName := range scenarioNames {
 			entries = append(entries, Entry("", scenarioName))
 		}
 		return entries
-	} else if scenario_group == "all" {
-		fmt.Println("Scenario group is all, so include both basic and hermetic scenario")
+	case "all":
+		GinkgoWriter.Printf("Running all scenarios\n")
 		for _, testScenario := range TestScenarios {
 			if testScenario.Group == "basic" || testScenario.Group == "hermetic" {
 				entries = append(entries, Entry("", testScenario.Name))
 			}
 		}
 		return entries
-	} else {
-		fmt.Println("For all other cases, run basic scenarios")
+	default:
+		GinkgoWriter.Printf("Running scenarios from SCENARIO_GROUP: %s\n", scenarioGroup)
 		for _, testScenario := range TestScenarios {
 			if testScenario.Group == "basic" {
 				entries = append(entries, Entry("", testScenario.Name))
