@@ -8,7 +8,7 @@ metadata:
     pipelinesascode.tekton.dev/cancel-in-progress: "false"
     pipelinesascode.tekton.dev/max-keep-runs: "3"
     pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch
-      == "main" && ( "pipelines/tekton-bundle-builder-oci-ta/***".pathChanged() || ".tekton/pipeline-tekton-bundle-builder-oci-ta-push.yaml".pathChanged()
+      == "main" && ( files.all.exists(f, f.startsWith("pipelines/tekton-bundle-builder-oci-ta/") && !f.endsWith(".md")) || ".tekton/pipeline-tekton-bundle-builder-oci-ta-push.yaml".pathChanged()
       || ".tekton/pipelines/build-tekton-bundle.yaml".pathChanged() )
   labels:
     appstudio.openshift.io/application: container-build-catalog-pipelines
